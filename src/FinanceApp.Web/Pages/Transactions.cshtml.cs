@@ -77,7 +77,17 @@ public class TransactionsModel : PageModel
                 ExpenseTransactions = g.Where(t => t.Type == TransactionType.Expense).OrderBy(t => t.Category).ToList(),
                 OtherTransactions = g.Where(t => t.Type != TransactionType.Revenue && t.Type != TransactionType.Expense).OrderBy(t => t.Category).ToList(),
                 MonthlyRevenue = g.Where(t => t.Type == TransactionType.Revenue).Sum(t => t.Amount),
-                MonthlyExpenses = g.Where(t => t.Type == TransactionType.Expense).Sum(t => Math.Abs(t.Amount))
+                MonthlyExpenses = g.Where(t => t.Type == TransactionType.Expense).Sum(t => Math.Abs(t.Amount)),
+                ExpenseBreakdown = g.Where(t => t.Type == TransactionType.Expense)
+                    .GroupBy(t => t.Category)
+                    .Select(categoryGroup => new ExpenseCategory
+                    {
+                        Category = categoryGroup.Key,
+                        Amount = categoryGroup.Sum(t => Math.Abs(t.Amount)),
+                        Color = GetCategoryColor(categoryGroup.Key)
+                    })
+                    .OrderByDescending(ec => ec.Amount)
+                    .ToList()
             })
             .ToList();
         
@@ -90,6 +100,56 @@ public class TransactionsModel : PageModel
             .Where(t => t.Type == TransactionType.Expense)
             .Sum(t => Math.Abs(t.Amount));
     }
+    
+    /// <summary>
+    /// Get consistent color for German expense categories across all charts
+    /// Uses colorblind-friendly palette with sufficient contrast
+    /// </summary>
+    private static string GetCategoryColor(string category)
+    {
+        var germanCategoryColors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Personalkosten", "#dc3545" },        // Red - Personnel costs
+            { "Materialaufwand", "#fd7e14" },      // Orange - Material expenses
+            { "Raumkosten", "#6f42c1" },           // Purple - Space costs
+            { "Fahrzeugkosten", "#0dcaf0" },       // Cyan - Vehicle costs
+            { "Versicherungen", "#198754" },       // Green - Insurance
+            { "Steuern", "#6c757d" },              // Gray - Taxes
+            { "Werbekosten", "#e83e8c" },          // Pink - Advertising costs
+            { "Abschreibungen", "#ffc107" },       // Yellow - Depreciation
+            { "Zinsen", "#20c997" },               // Teal - Interest
+            { "Sonstige", "#495057" }              // Dark gray - Other
+        };
+        
+        // Check for exact matches first
+        if (germanCategoryColors.TryGetValue(category, out var exactColor))
+        {
+            return exactColor;
+        }
+        
+        // Check for partial matches for categories containing key terms
+        foreach (var (key, color) in germanCategoryColors)
+        {
+            if (category.Contains(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return color;
+            }
+        }
+        
+        // Default color for unknown categories
+        return "#adb5bd"; // Bootstrap gray-400
+    }
+}
+
+/// <summary>
+/// Represents expense category data for pie chart visualization
+/// German categories preserved (e.g., "Personalkosten", "Materialaufwand")
+/// </summary>
+public class ExpenseCategory
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Color { get; set; } = string.Empty; // For consistent chart colors
 }
 
 public class TransactionGroup
@@ -103,4 +163,10 @@ public class TransactionGroup
     public decimal MonthlyRevenue { get; set; }
     public decimal MonthlyExpenses { get; set; }
     public decimal MonthlyNetResult => MonthlyRevenue - MonthlyExpenses;
+    
+    /// <summary>
+    /// Expense breakdown data for pie chart visualization
+    /// German categories preserved (e.g., "Personalkosten", "Materialaufwand")
+    /// </summary>
+    public List<ExpenseCategory> ExpenseBreakdown { get; set; } = new();
 }

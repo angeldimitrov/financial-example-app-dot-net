@@ -67,7 +67,7 @@
                                 
                                 <div class="row">
                                     <!-- Revenue Section -->
-                                    <div class="col-lg-4 mb-3">
+                                    <div class="col-lg-3 mb-3">
                                         <div class="card border-success h-100">
                                             <div class="card-header bg-success text-white">
                                                 <h6 class="card-title mb-0">
@@ -112,7 +112,7 @@
                                     </div>
                                     
                                     <!-- Expenses Section -->
-                                    <div class="col-lg-4 mb-3">
+                                    <div class="col-lg-3 mb-3">
                                         <div class="card border-danger h-100">
                                             <div class="card-header bg-danger text-white">
                                                 <h6 class="card-title mb-0">
@@ -156,8 +156,31 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- Expense Chart Section -->
+                                    <div class="col-lg-3 mb-3">
+                                        <div class="card border-info h-100">
+                                            <div class="card-header bg-info text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-pie-chart"></i> Expense Breakdown
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (group.ExpenseBreakdown.Any())
+                                                {
+                                                    <canvas id="expenseChart_@(group.Year)_@(group.Month)" style="height: 250px;"></canvas>
+                                                }
+                                                else
+                                                {
+                                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                                        <p class="text-muted fst-italic mb-0">No expenses this month</p>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <!-- Profit/Loss Section -->
-                                    <div class="col-lg-4 mb-3">
+                                    <div class="col-lg-3 mb-3">
                                         <div class="card border-@(group.MonthlyNetResult >= 0 ? "success" : "warning") h-100">
                                             <div class="card-header bg-@(group.MonthlyNetResult >= 0 ? "success" : "warning") text-white">
                                                 <h6 class="card-title mb-0">
@@ -228,7 +251,72 @@
     </div>
 </div>
 
-@functions {
+@section Scripts {
+    @if (Model.GroupedTransactions != null && Model.GroupedTransactions.Any())
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Initialize expense pie charts for each month
+            document.addEventListener('DOMContentLoaded', function() {
+                @foreach (var group in Model.GroupedTransactions)
+                {
+                    if (group.ExpenseBreakdown.Any())
+                    {
+                        <text>
+                        // Chart data for @group.MonthYear
+                        const chartData_@(group.Year)_@(group.Month) = {
+                            categories: [@Html.Raw(string.Join(", ", group.ExpenseBreakdown.Select(e => $"\"{e.Category}\"")))],
+                            amounts: [@Html.Raw(string.Join(", ", group.ExpenseBreakdown.Select(e => e.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                            colors: [@Html.Raw(string.Join(", ", group.ExpenseBreakdown.Select(e => $"\"{e.Color}\"")))]
+                        };
+                        
+                        // Create pie chart for @group.MonthYear
+                        const ctx_@(group.Year)_@(group.Month) = document.getElementById('expenseChart_@(group.Year)_@(group.Month)').getContext('2d');
+                        const expenseChart_@(group.Year)_@(group.Month) = new Chart(ctx_@(group.Year)_@(group.Month), {
+                            type: 'pie',
+                            data: {
+                                labels: chartData_@(group.Year)_@(group.Month).categories,
+                                datasets: [{
+                                    data: chartData_@(group.Year)_@(group.Month).amounts,
+                                    backgroundColor: chartData_@(group.Year)_@(group.Month).colors,
+                                    borderWidth: 2,
+                                    borderColor: '#fff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: { 
+                                            boxWidth: 12,
+                                            padding: 8,
+                                            font: { size: 11 }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const value = context.parsed;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return context.label + ': €' + value.toLocaleString('de-DE', {
+                                                    minimumFractionDigits: 2
+                                                }) + ` (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        </text>
+                    }
+                }
+            });
+        </script>
+    }
+}\n\n@functions {
     private string GetTypeBadgeClass(TransactionType type)
     {
         return type switch
