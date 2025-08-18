@@ -1,0 +1,251 @@
+@page
+@model FinanceApp.Web.Pages.TransactionsModel
+@{
+    ViewData["Title"] = "Transaction Details";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="bi bi-list-ul"></i> Transaction Details
+            </h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="year" class="form-label">Year</label>
+                            <select name="year" id="year" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Years</option>
+                                @foreach (var yr in Model.AvailableYears)
+                                {
+                                    <option value="@yr" selected="@(Model.SelectedYear == yr)">@yr</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="month" class="form-label">Month</label>
+                            <select name="month" id="month" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Months</option>
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    var monthName = new DateTime(2024, m, 1).ToString("MMMM");
+                                    <option value="@m" selected="@(Model.SelectedMonth == m)">@monthName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                <option value="Revenue" selected="@(Model.SelectedType == "Revenue")">Revenue</option>
+                                <option value="Expense" selected="@(Model.SelectedType == "Expense")">Expenses</option>
+                                <option value="Summary" selected="@(Model.SelectedType == "Summary")">Summary</option>
+                                <option value="Other" selected="@(Model.SelectedType == "Other")">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <a href="/Transactions" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-body">
+                    @if (Model.GroupedTransactions != null && Model.GroupedTransactions.Any())
+                    {
+                        @foreach (var group in Model.GroupedTransactions)
+                        {
+                            <div class="mb-5">
+                                <h4 class="mb-4 text-center">
+                                    <i class="bi bi-calendar3"></i> @group.MonthYear
+                                </h4>
+                                
+                                <div class="row">
+                                    <!-- Revenue Section -->
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-success h-100">
+                                            <div class="card-header bg-success text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-arrow-up-circle"></i> Revenue
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (group.RevenueTransactions.Any())
+                                                {
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless">
+                                                            <tbody>
+                                                                @foreach (var transaction in group.RevenueTransactions)
+                                                                {
+                                                                    <tr>
+                                                                        <td class="ps-0">@transaction.Category</td>
+                                                                        <td class="text-end pe-0 text-success fw-bold">
+                                                                            €@transaction.Amount.ToString("N2")
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <p class="text-muted fst-italic">No revenue this month</p>
+                                                }
+                                            </div>
+                                            <div class="card-footer bg-light">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <strong>Total Revenue:</strong>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <strong class="text-success">€@group.MonthlyRevenue.ToString("N2")</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Expenses Section -->
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-danger h-100">
+                                            <div class="card-header bg-danger text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-arrow-down-circle"></i> Expenses
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (group.ExpenseTransactions.Any())
+                                                {
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless">
+                                                            <tbody>
+                                                                @foreach (var transaction in group.ExpenseTransactions)
+                                                                {
+                                                                    <tr>
+                                                                        <td class="ps-0">@transaction.Category</td>
+                                                                        <td class="text-end pe-0 text-danger fw-bold">
+                                                                            €@Math.Abs(transaction.Amount).ToString("N2")
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <p class="text-muted fst-italic">No expenses this month</p>
+                                                }
+                                            </div>
+                                            <div class="card-footer bg-light">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <strong>Total Expenses:</strong>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <strong class="text-danger">€@group.MonthlyExpenses.ToString("N2")</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Profit/Loss Section -->
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-@(group.MonthlyNetResult >= 0 ? "success" : "warning") h-100">
+                                            <div class="card-header bg-@(group.MonthlyNetResult >= 0 ? "success" : "warning") text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-@(group.MonthlyNetResult >= 0 ? "graph-up" : "graph-down")"></i> 
+                                                    @(group.MonthlyNetResult >= 0 ? "Profit" : "Loss")
+                                                </h6>
+                                            </div>
+                                            <div class="card-body d-flex align-items-center justify-content-center">
+                                                <div class="text-center">
+                                                    <div class="display-6 fw-bold @(group.MonthlyNetResult >= 0 ? "text-success" : "text-danger")">
+                                                        €@group.MonthlyNetResult.ToString("N2")
+                                                    </div>
+                                                    <small class="text-muted">Net Result</small>
+                                                </div>
+                                            </div>
+                                            @if (group.OtherTransactions.Any())
+                                            {
+                                                <div class="card-footer bg-light">
+                                                    <small class="text-muted">
+                                                        <strong>Other Items:</strong>
+                                                        @string.Join(", ", group.OtherTransactions.Select(t => t.Category).Distinct())
+                                                    </small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Summary</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p class="mb-1">Total Revenue:</p>
+                                        <h4 class="text-success">€@Model.TotalRevenue.ToString("N2")</h4>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1">Total Expenses:</p>
+                                        <h4 class="text-danger">€@Model.TotalExpenses.ToString("N2")</h4>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1">Net Result:</p>
+                                        <h4 class="@(Model.NetResult >= 0 ? "text-success" : "text-danger")">
+                                            €@Model.NetResult.ToString("N2")
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No transactions found for the selected criteria.
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-cloud-upload"></i> Upload New PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetTypeBadgeClass(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.Revenue => "bg-success",
+            TransactionType.Expense => "bg-danger",
+            TransactionType.Summary => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+    
+    private string GetAmountClass(TransactionType type, decimal amount)
+    {
+        if (type == TransactionType.Revenue || amount > 0)
+            return "text-success";
+        if (type == TransactionType.Expense || amount < 0)
+            return "text-danger";
+        return "";
+    }
+}
