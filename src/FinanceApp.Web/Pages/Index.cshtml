@@ -1,0 +1,250 @@
+@page
+@model FinanceApp.Web.Pages.IndexModel
+@{
+    ViewData["Title"] = "Upload Financial Report";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Upload Jahresübersicht PDF</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["Warning"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            @TempData["Warning"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="pdfFile" class="form-label">Select PDF File</label>
+                            <input type="file" class="form-control" id="pdfFile" name="pdfFile" 
+                                   accept=".pdf" required>
+                            <div class="invalid-feedback">
+                                Please select a PDF file to upload.
+                            </div>
+                            <div class="form-text">
+                                Upload a financial Jahresübersicht PDF (Max size: 10MB)
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cloud-upload"></i> Upload and Import
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i> Revenue vs Expenses Trend
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="position: relative; height: 400px;">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Monthly Summary</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Expenses</th>
+                                        <th class="text-end">Net Result</th>
+                                        <th class="text-end">Transactions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var summary in Model.MonthlySummaries)
+                                    {
+                                        <tr>
+                                            <td>@summary.MonthName</td>
+                                            <td class="text-end text-success">€@summary.TotalRevenue.ToString("N2")</td>
+                                            <td class="text-end text-danger">€@summary.TotalExpenses.ToString("N2")</td>
+                                            <td class="text-end @(summary.NetResult >= 0 ? "text-success" : "text-danger")">
+                                                €@summary.NetResult.ToString("N2")
+                                            </td>
+                                            <td class="text-end">@summary.TransactionCount</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr class="fw-bold">
+                                        <td>Total</td>
+                                        <td class="text-end text-success">
+                                            €@Model.MonthlySummaries.Sum(s => s.TotalRevenue).ToString("N2")
+                                        </td>
+                                        <td class="text-end text-danger">
+                                            €@Model.MonthlySummaries.Sum(s => s.TotalExpenses).ToString("N2")
+                                        </td>
+                                        <td class="text-end @(Model.MonthlySummaries.Sum(s => s.NetResult) >= 0 ? "text-success" : "text-danger")">
+                                            €@Model.MonthlySummaries.Sum(s => s.NetResult).ToString("N2")
+                                        </td>
+                                        <td class="text-end">@Model.MonthlySummaries.Sum(s => s.TransactionCount)</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="/Transactions" class="btn btn-outline-primary">
+                                <i class="bi bi-list-ul"></i> View All Transactions
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No data imported yet. Upload a PDF to get started.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Initialize Chart.js
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            const financeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Model.ChartLabelsJson),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: @Html.Raw(Model.RevenueDataJson),
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Expenses',
+                        data: @Html.Raw(Model.ExpenseDataJson),
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': €' + context.parsed.y.toLocaleString('de-DE', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (EUR)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value.toLocaleString('de-DE');
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 6,
+                            hoverRadius: 8
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+    
+    <script>
+        // Bootstrap form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+}
