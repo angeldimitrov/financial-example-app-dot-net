@@ -1,0 +1,490 @@
+@page
+@model FinanceApp.Web.Pages.PositionTrendsModel
+@{
+    ViewData["Title"] = "Position Trends";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Position Development Over Time
+                    </h3>
+                    <p class="mb-0 mt-2">Track individual position trends across time periods</p>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel"></i> Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Position Selector -->
+                        <div class="col-md-4">
+                            <label for="positionSelect" class="form-label">Position</label>
+                            <select class="form-select" id="positionSelect">
+                                <option value="">All Positions</option>
+                                @if (Model.AvailablePositions != null)
+                                {
+                                    @foreach (var position in Model.AvailablePositions)
+                                    {
+                                        <option value="@position">@position</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        
+                        <!-- Type Filter -->
+                        <div class="col-md-4">
+                            <label class="form-label">Transaction Type</label>
+                            <div class="btn-group w-100" role="group" aria-label="Transaction type filter">
+                                <input type="radio" class="btn-check" name="typeFilter" id="typeAll" value="all" checked>
+                                <label class="btn btn-outline-secondary" for="typeAll">All</label>
+                                
+                                <input type="radio" class="btn-check" name="typeFilter" id="typeRevenue" value="revenue">
+                                <label class="btn btn-outline-success" for="typeRevenue">Revenue</label>
+                                
+                                <input type="radio" class="btn-check" name="typeFilter" id="typeExpenses" value="expenses">
+                                <label class="btn btn-outline-danger" for="typeExpenses">Expenses</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Year Selector -->
+                        <div class="col-md-4">
+                            <label for="yearSelect" class="form-label">Year</label>
+                            <select class="form-select" id="yearSelect">
+                                <option value="">All Years</option>
+                                @if (Model.AvailableYears != null)
+                                {
+                                    @foreach (var year in Model.AvailableYears.OrderByDescending(y => y))
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" id="applyFilters" class="btn btn-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Update Chart
+                            </button>
+                            <button type="button" id="resetFilters" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart-line"></i> Position Trends Chart
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Loading Spinner -->
+                    <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading position trend data...</p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span id="errorText">An error occurred while loading the data.</span>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div id="chartContainer" style="position: relative; height: 500px;">
+                        <canvas id="positionTrendsChart"></canvas>
+                    </div>
+
+                    <!-- No Data Message -->
+                    <div id="noDataMessage" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <h6 class="mt-3 text-muted">No data available</h6>
+                        <p class="text-muted">Try adjusting your filters or import more financial data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Legend and Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Chart Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Legend:</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><span class="badge bg-success me-2">Green</span> Revenue positions</li>
+                                <li><span class="badge bg-danger me-2">Red</span> Expense positions</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Instructions:</h6>
+                            <ul class="small text-muted">
+                                <li>Click on legend items to show/hide data series</li>
+                                <li>Hover over data points for detailed values</li>
+                                <li>Use filters above to narrow down the data</li>
+                                <li>All amounts are displayed in EUR with German formatting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        /**
+         * Position Trends Chart Implementation for German BWA Data
+         * 
+         * German Financial Context:
+         * - Processes authentic German BWA (Betriebswirtschaftliche Auswertung) position data
+         * - Position names preserved in German (e.g., "Personalkosten", "Umsatzerlöse")
+         * - Follows German accounting conventions and cultural formatting
+         * - Supports analysis of standard German business expense and revenue categories
+         * 
+         * Chart Features:
+         * - Multi-line Chart.js visualization for position development over time
+         * - Color coding based on German business logic (green for Erlöse, red for Kosten)
+         * - German number formatting with Euro currency (1.234,56 €)
+         * - German month abbreviations (Jan, Feb, Mär, Apr, Mai, Jun, Jul, Aug, Sep, Okt, Nov, Dez)
+         * - Interactive legend with position type indicators (Revenue/Expense)
+         * - AJAX-based data loading with proper German character encoding
+         * - Responsive design optimized for German business users
+         * 
+         * Business Intelligence:
+         * - Enables trend analysis of key German business metrics
+         * - Supports seasonal pattern recognition in German fiscal calendar
+         * - Facilitates comparison of revenue streams (Umsatzerlöse variations)
+         * - Allows monitoring of major cost centers (Personalkosten, Materialkosten)
+         */
+        let positionChart = null;
+        let currentChartData = null;
+        
+        // German locale formatting for currency
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        };
+        
+        // Color palette for different positions
+        const getPositionColor = (positionName, type, index) => {
+            // Base colors: Green for revenue, Red for expenses
+            const baseColors = {
+                revenue: [
+                    '#28a745', '#20c997', '#17a2b8', '#6f42c1',
+                    '#e83e8c', '#fd7e14', '#ffc107', '#6610f2'
+                ],
+                expense: [
+                    '#dc3545', '#e74c3c', '#c0392b', '#a93226',
+                    '#922b21', '#7b241c', '#641e16', '#58181a'
+                ]
+            };
+            
+            const colorSet = type.toLowerCase() === 'revenue' ? baseColors.revenue : baseColors.expense;
+            return colorSet[index % colorSet.length];
+        };
+        
+        /**
+         * Initialize the Chart.js chart with configuration
+         * Supports multiple datasets with different colors and styling
+         */
+        const initChart = () => {
+            const ctx = document.getElementById('positionTrendsChart').getContext('2d');
+            
+            positionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                },
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                    const labels = original.call(this, chart);
+                                    
+                                    // Add type indicator to legend labels
+                                    labels.forEach((label, index) => {
+                                        if (chart.data.datasets[index]) {
+                                            const type = chart.data.datasets[index].positionType || 'Unknown';
+                                            label.text = `${label.text} (${type})`;
+                                        }
+                                    });
+                                    
+                                    return labels;
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const datasetLabel = context.dataset.label || '';
+                                    const value = formatCurrency(context.parsed.y);
+                                    return `${datasetLabel}: ${value}`;
+                                },
+                                title: function(context) {
+                                    return `Period: ${context[0].label}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time Period',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (EUR)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 6,
+                            hoverRadius: 8,
+                            borderWidth: 2
+                        },
+                        line: {
+                            borderWidth: 3,
+                            tension: 0.2
+                        }
+                    }
+                }
+            });
+        };
+        
+        /**
+         * Load position trends data from the API endpoint
+         * Handles filtering parameters and updates the chart
+         */
+        const loadPositionTrends = async () => {
+            try {
+                showLoading(true);
+                hideError();
+                hideNoData();
+                
+                // Get current filter values
+                const selectedPosition = document.getElementById('positionSelect').value;
+                const selectedType = document.querySelector('input[name="typeFilter"]:checked').value;
+                const selectedYear = document.getElementById('yearSelect').value;
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (selectedPosition) {
+                    params.append('positions', selectedPosition);
+                }
+                if (selectedYear) {
+                    params.append('year', selectedYear);
+                }
+                if (selectedType && selectedType !== 'all') {
+                    params.append('type', selectedType);
+                }
+                
+                // Make API call
+                const response = await fetch(`/PositionTrends?handler=PositionTrends&${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Check for server-side errors
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                currentChartData = data;
+                updateChart(data);
+                
+            } catch (error) {
+                console.error('Error loading position trends:', error);
+                showError(`Failed to load data: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        };
+        
+        /**
+         * Update the Chart.js chart with new data
+         * Creates datasets for each position with appropriate styling
+         */
+        const updateChart = (data) => {
+            if (!data.series || data.series.length === 0) {
+                showNoData(true);
+                positionChart.data.labels = [];
+                positionChart.data.datasets = [];
+                positionChart.update();
+                return;
+            }
+            
+            hideNoData();
+            
+            // Extract all unique periods from all series
+            const allPeriods = [...new Set(
+                data.series.flatMap(series => 
+                    series.dataPoints.map(point => point.period)
+                )
+            )].sort();
+            
+            // Create datasets for Chart.js
+            const datasets = data.series.map((series, index) => {
+                const color = getPositionColor(series.positionName, series.type, index);
+                
+                // Create data array matching the periods
+                const dataPoints = allPeriods.map(period => {
+                    const point = series.dataPoints.find(p => p.period === period);
+                    return point ? point.amount : null;
+                });
+                
+                return {
+                    label: series.positionName,
+                    positionType: series.type, // Store for legend display
+                    data: dataPoints,
+                    borderColor: color,
+                    backgroundColor: color + '20', // Add transparency for fill
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.2,
+                    pointBackgroundColor: color,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    spanGaps: true // Connect points across null values
+                };
+            });
+            
+            // Update chart data
+            positionChart.data.labels = allPeriods;
+            positionChart.data.datasets = datasets;
+            positionChart.update();
+        };
+        
+        /**
+         * UI State Management Functions
+         */
+        const showLoading = (show) => {
+            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+            document.getElementById('chartContainer').style.opacity = show ? '0.5' : '1';
+        };
+        
+        const showError = (message) => {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        };
+        
+        const hideError = () => {
+            document.getElementById('errorMessage').style.display = 'none';
+        };
+        
+        const showNoData = (show) => {
+            document.getElementById('noDataMessage').style.display = show ? 'block' : 'none';
+        };
+        
+        const hideNoData = () => {
+            document.getElementById('noDataMessage').style.display = 'none';
+        };
+        
+        /**
+         * Reset all filters to default values
+         */
+        const resetFilters = () => {
+            document.getElementById('positionSelect').value = '';
+            document.getElementById('yearSelect').value = '';
+            document.getElementById('typeAll').checked = true;
+            loadPositionTrends();
+        };
+        
+        /**
+         * Initialize page when DOM is loaded
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Chart.js
+            initChart();
+            
+            // Load initial data
+            loadPositionTrends();
+            
+            // Event listeners for filter controls
+            document.getElementById('applyFilters').addEventListener('click', loadPositionTrends);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            
+            // Optional: Auto-update on filter change
+            document.getElementById('positionSelect').addEventListener('change', loadPositionTrends);
+            document.getElementById('yearSelect').addEventListener('change', loadPositionTrends);
+            
+            // Type filter radio buttons
+            document.querySelectorAll('input[name="typeFilter"]').forEach(radio => {
+                radio.addEventListener('change', loadPositionTrends);
+            });
+            
+            console.log('Position Trends page initialized');
+        });
+    </script>
+}

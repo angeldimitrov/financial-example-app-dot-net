@@ -6,10 +6,12 @@ A .NET 9 web application for importing and analyzing German financial PDF report
 
 - **PDF Import**: Upload and parse German Jahresübersicht PDFs
 - **Data Visualization**: Interactive Chart.js charts for financial trends
+- **Position Trends**: Multi-line charts showing individual position development over time
 - **Transaction Analysis**: Detailed breakdown of Revenue, Expenses, and Profit
 - **German Localization**: Culture-aware parsing for German number formats (1.234,56)
 - **Duplicate Prevention**: Automatic detection of duplicate imports by Year/Month
 - **BWA Classification**: Intelligent categorization of German accounting categories
+- **Advanced Filtering**: Filter trends by position, type (Revenue/Expense), and year
 
 ## Quick Start
 
