@@ -1,247 +1,409 @@
 @page
 @model FinanceApp.Web.Pages.TransactionsModel
 @{
-    ViewData["Title"] = "Transaction Details";
+    ViewData["Title"] = "Transaktionsdetails";
 }
 
-<div class="container mt-4">
+<!-- Premium Transactions Header -->
+<div class="transactions-header mb-5 animate-in">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                    <div class="header-content">
+                        <h1 class="heading-1 mb-2 text-premium-primary">
+                            <i class="bi bi-list-ul me-3"></i>
+                            Transaktionsdetails
+                        </h1>
+                        <p class="text-premium-muted mb-0">
+                            Detaillierte Aufschlüsselung Ihrer BWA-Positionen
+                        </p>
+                    </div>
+                    <div class="header-stats d-flex gap-4 mt-3 mt-md-0">
+                        @if (Model.GroupedTransactions != null && Model.GroupedTransactions.Any())
+                        {
+                            <div class="stat-item text-center">
+                                <div class="stat-value fw-bold text-premium-primary">@Model.GroupedTransactions.Count()</div>
+                                <div class="stat-label text-xs text-premium-muted">Monate</div>
+                            </div>
+                            <div class="stat-item text-center">
+                                <div class="stat-value fw-bold text-premium-primary">@Model.GroupedTransactions.Sum(g => g.RevenueTransactions.Count() + g.ExpenseTransactions.Count())</div>
+                                <div class="stat-label text-xs text-premium-muted">Positionen</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h2 class="mb-4">
-                <i class="bi bi-list-ul"></i> Transaction Details
-            </h2>
             
-            <div class="card">
-                <div class="card-header">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="year" class="form-label">Year</label>
-                            <select name="year" id="year" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Years</option>
-                                @foreach (var yr in Model.AvailableYears)
-                                {
-                                    <option value="@yr" selected="@(Model.SelectedYear == yr)">@yr</option>
-                                }
-                            </select>
+            <!-- Premium Filter Section -->
+            <div class="card-premium animate-in mb-4">
+                <div class="card-header border-0 bg-transparent p-4 pb-0">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h3 class="heading-3 mb-1 text-premium-primary">
+                                <i class="bi bi-funnel me-2"></i>
+                                Filter & Suche
+                            </h3>
+                            <p class="text-premium-muted mb-0">Transaktionen nach Kriterien filtern</p>
                         </div>
-                        <div class="col-md-3">
-                            <label for="month" class="form-label">Month</label>
-                            <select name="month" id="month" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Months</option>
-                                @for (int m = 1; m <= 12; m++)
-                                {
-                                    var monthName = new DateTime(2024, m, 1).ToString("MMMM");
-                                    <option value="@m" selected="@(Model.SelectedMonth == m)">@monthName</option>
-                                }
-                            </select>
+                        <div class="filter-status">
+                            @if (!string.IsNullOrEmpty(Model.SelectedType) || Model.SelectedYear.HasValue || Model.SelectedMonth.HasValue)
+                            {
+                                <span class="badge bg-info-subtle text-info px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Filter aktiv
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-neutral-subtle text-neutral px-3 py-2">
+                                    Alle anzeigen
+                                </span>
+                            }
                         </div>
-                        <div class="col-md-3">
-                            <label for="type" class="form-label">Type</label>
-                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
-                                <option value="">All Types</option>
-                                <option value="Revenue" selected="@(Model.SelectedType == "Revenue")">Revenue</option>
-                                <option value="Expense" selected="@(Model.SelectedType == "Expense")">Expenses</option>
-                                <option value="Summary" selected="@(Model.SelectedType == "Summary")">Summary</option>
-                                <option value="Other" selected="@(Model.SelectedType == "Other")">Other</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
-                            <div>
-                                <a href="/Transactions" class="btn btn-secondary">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="get" class="premium-filter-form">
+                        <div class="row g-4">
+                            <div class="col-lg-3 col-md-6">
+                                <label for="year" class="form-label fw-medium">
+                                    <i class="bi bi-calendar-year me-2"></i>Jahr
+                                </label>
+                                <select name="year" id="year" class="form-control-premium" onchange="this.form.submit()">
+                                    <option value="">Alle Jahre</option>
+                                    @foreach (var yr in Model.AvailableYears)
+                                    {
+                                        <option value="@yr" selected="@(Model.SelectedYear == yr)">@yr</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label for="month" class="form-label fw-medium">
+                                    <i class="bi bi-calendar-month me-2"></i>Monat
+                                </label>
+                                <select name="month" id="month" class="form-control-premium" onchange="this.form.submit()">
+                                    <option value="">Alle Monate</option>
+                                    @for (int m = 1; m <= 12; m++)
+                                    {
+                                        var monthName = new DateTime(2024, m, 1).ToString("MMMM", new System.Globalization.CultureInfo("de-DE"));
+                                        <option value="@m" selected="@(Model.SelectedMonth == m)">@monthName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label for="type" class="form-label fw-medium">
+                                    <i class="bi bi-tags me-2"></i>Kategorie
+                                </label>
+                                <select name="type" id="type" class="form-control-premium" onchange="this.form.submit()">
+                                    <option value="">Alle Kategorien</option>
+                                    <option value="Revenue" selected="@(Model.SelectedType == "Revenue")">
+                                        <i class="bi bi-arrow-up-circle"></i> Erlöse
+                                    </option>
+                                    <option value="Expense" selected="@(Model.SelectedType == "Expense")">
+                                        <i class="bi bi-arrow-down-circle"></i> Kosten
+                                    </option>
+                                    <option value="Summary" selected="@(Model.SelectedType == "Summary")">Zusammenfassung</option>
+                                    <option value="Other" selected="@(Model.SelectedType == "Other")">Sonstige</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                                <div class="w-100">
+                                    <a href="/Transactions" class="btn-premium btn-premium-outline w-100">
+                                        <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                        Filter zurücksetzen
+                                    </a>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Filter Summary -->
+                        @if (!string.IsNullOrEmpty(Model.SelectedType) || Model.SelectedYear.HasValue || Model.SelectedMonth.HasValue)
+                        {
+                            <div class="filter-summary mt-4 p-3 bg-light rounded-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <small class="text-premium-muted fw-medium">Aktive Filter:</small>
+                                        @if (Model.SelectedYear.HasValue)
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary">Jahr: @Model.SelectedYear</span>
+                                        }
+                                        @if (Model.SelectedMonth.HasValue)
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary">Monat: @(new DateTime(2024, Model.SelectedMonth.Value, 1).ToString("MMMM", new System.Globalization.CultureInfo("de-DE")))</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.SelectedType))
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary">Typ: @Model.SelectedType</span>
+                                        }
+                                    </div>
+                                    <small class="text-premium-muted">
+                                        @(Model.GroupedTransactions?.Sum(g => g.RevenueTransactions.Count() + g.ExpenseTransactions.Count()) ?? 0) Einträge gefunden
+                                    </small>
+                                </div>
+                            </div>
+                        }
                     </form>
                 </div>
-                <div class="card-body">
-                    @if (Model.GroupedTransactions != null && Model.GroupedTransactions.Any())
+            </div>
+                
+            <!-- Premium Monthly Transactions Display -->
+            <div class="card-body p-4">
+                @if (Model.GroupedTransactions != null && Model.GroupedTransactions.Any())
+                {
+                    @foreach (var group in Model.GroupedTransactions)
                     {
-                        @foreach (var group in Model.GroupedTransactions)
-                        {
-                            <div class="mb-5">
-                                <h4 class="mb-4 text-center">
-                                    <i class="bi bi-calendar3"></i> @group.MonthYear
-                                </h4>
-                                
-                                <div class="row">
-                                    <!-- Revenue Section -->
-                                    <div class="col-lg-3 mb-3">
-                                        <div class="card border-success h-100">
-                                            <div class="card-header bg-success text-white">
-                                                <h6 class="card-title mb-0">
-                                                    <i class="bi bi-arrow-up-circle"></i> Revenue
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                @if (group.RevenueTransactions.Any())
-                                                {
+                        <div class="monthly-group-container mb-5 animate-in">
+                            <!-- Premium Month Header -->
+                            <div class="month-header-premium mb-4 text-center">
+                                <div class="d-inline-flex align-items-center bg-premium-glass rounded-pill px-4 py-2 shadow-premium-md">
+                                    <div class="month-indicator-large bg-premium-gradient text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-calendar3 fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="heading-4 mb-0 text-premium-primary">@group.MonthYear</h4>
+                                        <small class="text-premium-muted">BWA-Auswertung</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-4">
+                                <!-- Premium Revenue Section -->
+                                <div class="col-lg-3 mb-3">
+                                    <div class="card-premium border-0 h-100">
+                                        <div class="premium-section-header bg-success-subtle text-success p-3 rounded-top-3">
+                                            <h6 class="heading-6 mb-0 d-flex align-items-center">
+                                                <i class="bi bi-arrow-up-circle me-2"></i>
+                                                Erlöse
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            @if (group.RevenueTransactions.Any())
+                                            {
+                                                <div class="transaction-list">
                                                     @foreach (var transaction in group.RevenueTransactions)
                                                     {
-                                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <div class="me-2" style="min-width: 0; flex: 1;">
-                                                                <small class="text-truncate d-block" title="@transaction.Category">
-                                                                    @transaction.Category
-                                                                </small>
+                                                        <div class="transaction-item d-flex justify-content-between align-items-start mb-3 p-2 rounded-3 bg-light hover-shadow-sm">
+                                                            <div class="transaction-info me-2 flex-grow-1">
+                                                                <div class="bwa-position">@transaction.Category</div>
                                                             </div>
-                                                            <div class="text-success fw-bold text-nowrap">
-                                                                <small>€@transaction.Amount.ToString("N0")</small>
+                                                            <div class="transaction-amount currency-positive text-mono fw-medium">
+                                                                €@transaction.Amount.ToString("N0")
                                                             </div>
                                                         </div>
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    <p class="text-muted fst-italic">No revenue this month</p>
-                                                }
-                                            </div>
-                                            <div class="card-footer bg-light">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <strong>Total Revenue:</strong>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <strong class="text-success">€@group.MonthlyRevenue.ToString("N2")</strong>
-                                                    </div>
                                                 </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="empty-state-small text-center py-4">
+                                                    <i class="bi bi-inbox text-premium-muted opacity-50 fs-3"></i>
+                                                    <p class="text-premium-muted mb-0 mt-2">Keine Erlöse diesen Monat</p>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="premium-section-footer bg-neutral-subtle p-3 rounded-bottom-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-premium-secondary">Gesamt-Erlöse:</strong>
+                                                <strong class="currency-positive text-mono">€@group.MonthlyRevenue.ToString("N2")</strong>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Expenses Section -->
-                                    <div class="col-lg-3 mb-3">
-                                        <div class="card border-danger h-100">
-                                            <div class="card-header bg-danger text-white">
-                                                <h6 class="card-title mb-0">
-                                                    <i class="bi bi-arrow-down-circle"></i> Expenses
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                @if (group.ExpenseTransactions.Any())
-                                                {
+                                </div>
+                                
+                                <!-- Premium Expenses Section -->
+                                <div class="col-lg-3 mb-3">
+                                    <div class="card-premium border-0 h-100">
+                                        <div class="premium-section-header bg-danger-subtle text-danger p-3 rounded-top-3">
+                                            <h6 class="heading-6 mb-0 d-flex align-items-center">
+                                                <i class="bi bi-arrow-down-circle me-2"></i>
+                                                Kosten
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            @if (group.ExpenseTransactions.Any())
+                                            {
+                                                <div class="transaction-list">
                                                     @foreach (var transaction in group.ExpenseTransactions)
                                                     {
-                                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <div class="me-2" style="min-width: 0; flex: 1;">
-                                                                <small class="text-truncate d-block" title="@transaction.Category">
-                                                                    @transaction.Category
-                                                                </small>
+                                                        <div class="transaction-item d-flex justify-content-between align-items-start mb-3 p-2 rounded-3 bg-light hover-shadow-sm">
+                                                            <div class="transaction-info me-2 flex-grow-1">
+                                                                <div class="bwa-position">@transaction.Category</div>
                                                             </div>
-                                                            <div class="text-danger fw-bold text-nowrap">
-                                                                <small>€@Math.Abs(transaction.Amount).ToString("N0")</small>
+                                                            <div class="transaction-amount currency-negative text-mono fw-medium">
+                                                                €@Math.Abs(transaction.Amount).ToString("N0")
                                                             </div>
                                                         </div>
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    <p class="text-muted fst-italic">No expenses this month</p>
-                                                }
-                                            </div>
-                                            <div class="card-footer bg-light">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <strong>Total Expenses:</strong>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <strong class="text-danger">€@group.MonthlyExpenses.ToString("N2")</strong>
-                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Expense Chart Section -->
-                                    <div class="col-lg-3 mb-3">
-                                        <div class="card border-info h-100">
-                                            <div class="card-header bg-info text-white">
-                                                <h6 class="card-title mb-0">
-                                                    <i class="bi bi-pie-chart"></i> Expense Breakdown
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                @if (group.ExpenseBreakdown.Any())
-                                                {
-                                                    <canvas id="expenseChart_@(group.Year)_@(group.Month)" style="height: 250px;"></canvas>
-                                                }
-                                                else
-                                                {
-                                                    <div class="d-flex align-items-center justify-content-center h-100">
-                                                        <p class="text-muted fst-italic mb-0">No expenses this month</p>
-                                                    </div>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Profit/Loss Section -->
-                                    <div class="col-lg-3 mb-3">
-                                        <div class="card border-@(group.MonthlyNetResult >= 0 ? "success" : "warning") h-100">
-                                            <div class="card-header bg-@(group.MonthlyNetResult >= 0 ? "success" : "warning") text-white">
-                                                <h6 class="card-title mb-0">
-                                                    <i class="bi bi-@(group.MonthlyNetResult >= 0 ? "graph-up" : "graph-down")"></i> 
-                                                    @(group.MonthlyNetResult >= 0 ? "Profit" : "Loss")
-                                                </h6>
-                                            </div>
-                                            <div class="card-body d-flex align-items-center justify-content-center">
-                                                <div class="text-center">
-                                                    <div class="display-6 fw-bold @(group.MonthlyNetResult >= 0 ? "text-success" : "text-danger")">
-                                                        €@group.MonthlyNetResult.ToString("N2")
-                                                    </div>
-                                                    <small class="text-muted">Net Result</small>
-                                                </div>
-                                            </div>
-                                            @if (group.OtherTransactions.Any())
+                                            }
+                                            else
                                             {
-                                                <div class="card-footer bg-light">
-                                                    <small class="text-muted">
-                                                        <strong>Other Items:</strong>
-                                                        @string.Join(", ", group.OtherTransactions.Select(t => t.Category).Distinct())
-                                                    </small>
+                                                <div class="empty-state-small text-center py-4">
+                                                    <i class="bi bi-inbox text-premium-muted opacity-50 fs-3"></i>
+                                                    <p class="text-premium-muted mb-0 mt-2">Keine Kosten diesen Monat</p>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="premium-section-footer bg-neutral-subtle p-3 rounded-bottom-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-premium-secondary">Gesamt-Kosten:</strong>
+                                                <strong class="currency-negative text-mono">€@group.MonthlyExpenses.ToString("N2")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Premium Chart Section -->
+                                <div class="col-lg-3 mb-3">
+                                    <div class="card-premium border-0 h-100">
+                                        <div class="premium-section-header bg-info-subtle text-info p-3 rounded-top-3">
+                                            <h6 class="heading-6 mb-0 d-flex align-items-center">
+                                                <i class="bi bi-pie-chart me-2"></i>
+                                                Kosten-Verteilung
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3 d-flex align-items-center justify-content-center">
+                                            @if (group.ExpenseBreakdown.Any())
+                                            {
+                                                <div class="chart-container-small w-100" style="position: relative; height: 200px;">
+                                                    <canvas id="expenseChart_@(group.Year)_@(group.Month)"></canvas>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="empty-state-small text-center py-4">
+                                                    <i class="bi bi-pie-chart text-premium-muted opacity-50 fs-3"></i>
+                                                    <p class="text-premium-muted mb-0 mt-2">Keine Daten für Chart</p>
                                                 </div>
                                             }
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
-                        
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h5 class="card-title">Summary</h5>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <p class="mb-1">Total Revenue:</p>
-                                        <h4 class="text-success">€@Model.TotalRevenue.ToString("N2")</h4>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <p class="mb-1">Total Expenses:</p>
-                                        <h4 class="text-danger">€@Model.TotalExpenses.ToString("N2")</h4>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <p class="mb-1">Net Result:</p>
-                                        <h4 class="@(Model.NetResult >= 0 ? "text-success" : "text-danger")">
-                                            €@Model.NetResult.ToString("N2")
-                                        </h4>
+                                
+                                <!-- Premium Net Result Section -->
+                                <div class="col-lg-3 mb-3">
+                                    <div class="card-premium border-0 h-100">
+                                        <div class="premium-section-header bg-@(group.MonthlyNetResult >= 0 ? "success" : "warning")-subtle text-@(group.MonthlyNetResult >= 0 ? "success" : "warning") p-3 rounded-top-3">
+                                            <h6 class="heading-6 mb-0 d-flex align-items-center">
+                                                <i class="bi bi-@(group.MonthlyNetResult >= 0 ? "graph-up" : "graph-down") me-2"></i>
+                                                @(group.MonthlyNetResult >= 0 ? "Gewinn" : "Verlust")
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3 d-flex align-items-center justify-content-center text-center">
+                                            <div class="net-result-display">
+                                                <div class="result-amount display-6 fw-bold @(group.MonthlyNetResult >= 0 ? "currency-positive" : "currency-negative") text-mono">
+                                                    €@group.MonthlyNetResult.ToString("N2")
+                                                </div>
+                                                <small class="text-premium-muted">Netto-Ergebnis</small>
+                                            </div>
+                                        </div>
+                                        @if (group.OtherTransactions.Any())
+                                        {
+                                            <div class="premium-section-footer bg-neutral-subtle p-3 rounded-bottom-3">
+                                                <small class="text-premium-muted">
+                                                    <strong>Sonstige:</strong><br>
+                                                    @string.Join(", ", group.OtherTransactions.Select(t => t.Category).Distinct().Take(3))@(group.OtherTransactions.Select(t => t.Category).Distinct().Count() > 3 ? "..." : "")
+                                                </small>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
                         </div>
                     }
-                    else
-                    {
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No transactions found for the selected criteria.
+                    
+                    <!-- Premium Summary Section -->
+                    <div class="summary-section-premium mt-5">
+                        <div class="card-premium animate-in">
+                            <div class="card-header border-0 bg-transparent p-4 pb-0">
+                                <div class="text-center">
+                                    <h3 class="heading-3 mb-1 text-premium-primary">
+                                        <i class="bi bi-calculator me-2"></i>
+                                        Gesamtauswertung
+                                    </h3>
+                                    <p class="text-premium-muted mb-0">Zusammenfassung aller BWA-Perioden</p>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-md-4">
+                                        <div class="summary-card bg-success-subtle p-4 rounded-3 text-center">
+                                            <div class="summary-icon mb-2">
+                                                <i class="bi bi-arrow-up-circle fs-1 text-success"></i>
+                                            </div>
+                                            <div class="summary-label text-premium-muted mb-1">Gesamt-Erlöse</div>
+                                            <div class="summary-value display-5 fw-bold currency-positive text-mono">€@Model.TotalRevenue.ToString("N2")</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="summary-card bg-danger-subtle p-4 rounded-3 text-center">
+                                            <div class="summary-icon mb-2">
+                                                <i class="bi bi-arrow-down-circle fs-1 text-danger"></i>
+                                            </div>
+                                            <div class="summary-label text-premium-muted mb-1">Gesamt-Kosten</div>
+                                            <div class="summary-value display-5 fw-bold currency-negative text-mono">€@Model.TotalExpenses.ToString("N2")</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="summary-card bg-@(Model.NetResult >= 0 ? "success" : "warning")-subtle p-4 rounded-3 text-center">
+                                            <div class="summary-icon mb-2">
+                                                <i class="bi bi-@(Model.NetResult >= 0 ? "graph-up" : "graph-down") fs-1 text-@(Model.NetResult >= 0 ? "success" : "warning")"></i>
+                                            </div>
+                                            <div class="summary-label text-premium-muted mb-1">Netto-Ergebnis</div>
+                                            <div class="summary-value display-5 fw-bold @(Model.NetResult >= 0 ? "currency-positive" : "currency-negative") text-mono">€@Model.NetResult.ToString("N2")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Premium Empty State -->
+                    <div class="premium-empty-state text-center py-5">
+                        <div class="empty-state-icon mb-4">
+                            <i class="bi bi-search display-1 text-premium-muted opacity-50"></i>
+                        </div>
+                        <h4 class="heading-4 text-premium-muted mb-3">Keine Transaktionen gefunden</h4>
+                        <p class="text-premium-muted mb-4">
+                            Für die ausgewählten Filterkriterien wurden keine BWA-Positionen gefunden.
+                        </p>
+                        <div class="d-flex flex-column align-items-center gap-3">
+                            <div class="suggestions">
+                                <small class="text-premium-muted"><i class="bi bi-lightbulb me-1"></i> <strong>Vorschläge:</strong></small>
+                                <ul class="list-unstyled text-start small mt-2">
+                                    <li class="mb-1">• Erweitern Sie den Zeitraum</li>
+                                    <li class="mb-1">• Wählen Sie andere Kategorien</li>
+                                    <li class="mb-1">• Überprüfen Sie die Filtereinstellungen</li>
+                                    <li class="mb-1">• Importieren Sie weitere BWA-Daten</li>
+                                </ul>
+                            </div>
+                            <a href="/Transactions" class="btn-premium btn-premium-primary">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                Filter zurücksetzen
+                            </a>
+                        </div>
+                    </div>
+                }
             </div>
             
-            <div class="mt-3">
-                <a href="/" class="btn btn-primary">
-                    <i class="bi bi-cloud-upload"></i> Upload New PDF
-                </a>
+            <!-- Premium Action Footer -->
+            <div class="card-footer border-0 bg-transparent p-4">
+                <div class="d-flex justify-content-center">
+                    <a href="/" class="btn-premium btn-premium-primary">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        Neue BWA-Datei hochladen
+                    </a>
+                </div>
             </div>
         </div>
     </div>
