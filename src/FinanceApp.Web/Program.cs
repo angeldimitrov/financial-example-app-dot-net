@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register application services
 builder.Services.AddScoped<PdfParserService>();
 builder.Services.AddScoped<DataImportService>();
+builder.Services.AddScoped<ITrendAnalysisService, TrendAnalysisService>();
 
 // Configure file upload size limits
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
