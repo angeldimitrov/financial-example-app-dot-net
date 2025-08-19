@@ -102,3 +102,5 @@ The application processes BWA reports which follow standardized German accountin
 - Complete PRD documentation in `PRD.md`
 - Docker configuration for PostgreSQL in `docker-compose.yml`
 - always use gh cli when possible
+- when you are writing tests, please make sure one test runs completly before going to the text one
+- always test changes in the browser with the playwrith mcp

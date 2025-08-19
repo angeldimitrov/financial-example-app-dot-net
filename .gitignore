@@ -382,3 +382,6 @@ FodyWeavers.xsd
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Playwright MCP browser automation screenshots and temp files
+.playwright-mcp/
