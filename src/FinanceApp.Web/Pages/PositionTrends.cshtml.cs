@@ -4,6 +4,7 @@ using FinanceApp.Web.Data;
 using FinanceApp.Web.Models;
 using FinanceApp.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace FinanceApp.Web.Pages;
 
@@ -152,8 +153,60 @@ public class PositionTrendsModel : PageModel
                     .ToList();
             }
             
-            // Get trend data from service
-            var trendData = await _trendAnalysisService.GetPositionTrendsAsync(year, positionFilter);
+            // Get trend data directly from database since service interface changed
+            var query = _context.TransactionLines
+                .Include(tl => tl.FinancialPeriod)
+                .Where(tl => tl.Type != TransactionType.Summary);
+
+            // Apply year filter
+            if (year.HasValue)
+            {
+                query = query.Where(tl => tl.Year == year.Value);
+            }
+
+            // Apply position filter
+            if (positionFilter != null && positionFilter.Any())
+            {
+                query = query.Where(tl => positionFilter.Contains(tl.Category));
+            }
+
+            // Get grouped data
+            var groupedData = await query
+                .GroupBy(tl => tl.Category)
+                .Select(g => new
+                {
+                    PositionName = g.Key,
+                    Type = g.First().Type,
+                    MonthlyData = g.GroupBy(tl => new { tl.Year, tl.Month })
+                        .Select(monthGroup => new
+                        {
+                            Year = monthGroup.Key.Year,
+                            Month = monthGroup.Key.Month,
+                            Amount = monthGroup.Sum(tl => tl.Amount)
+                        })
+                        .OrderBy(md => md.Year)
+                        .ThenBy(md => md.Month)
+                        .ToList()
+                })
+                .ToListAsync();
+
+            // Transform to TrendData format
+            var trendData = new TrendData
+            {
+                Positions = groupedData.Select(g => g.PositionName).ToList(),
+                Series = groupedData.Select(g => new PositionSeries
+                {
+                    PositionName = g.PositionName,
+                    Type = g.Type == TransactionType.Revenue ? "Revenue" : "Expense",
+                    DataPoints = g.MonthlyData.Select(md => new TrendDataPoint
+                    {
+                        Period = $"{GetGermanMonthName(md.Month)} {md.Year}",
+                        Amount = md.Amount,
+                        Year = md.Year,
+                        Month = md.Month
+                    }).ToList()
+                }).ToList()
+            };
             
             // Apply type filter if specified
             if (!string.IsNullOrWhiteSpace(type) && type.ToLower() != "all")
@@ -197,5 +250,15 @@ public class PositionTrendsModel : PageModel
                 StatusCode = 500
             };
         }
+    }
+    
+    /// <summary>
+    /// Helper method to get German month names for proper localization
+    /// </summary>
+    private string GetGermanMonthName(int month)
+    {
+        var germanCulture = new CultureInfo("de-DE");
+        var date = new DateTime(2024, month, 1);
+        return date.ToString("MMM", germanCulture);
     }
 }
