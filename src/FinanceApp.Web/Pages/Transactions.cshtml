@@ -77,21 +77,19 @@
                                             <div class="card-body">
                                                 @if (group.RevenueTransactions.Any())
                                                 {
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-borderless">
-                                                            <tbody>
-                                                                @foreach (var transaction in group.RevenueTransactions)
-                                                                {
-                                                                    <tr>
-                                                                        <td class="ps-0">@transaction.Category</td>
-                                                                        <td class="text-end pe-0 text-success fw-bold">
-                                                                            €@transaction.Amount.ToString("N2")
-                                                                        </td>
-                                                                    </tr>
-                                                                }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                    @foreach (var transaction in group.RevenueTransactions)
+                                                    {
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div class="me-2" style="min-width: 0; flex: 1;">
+                                                                <small class="text-truncate d-block" title="@transaction.Category">
+                                                                    @transaction.Category
+                                                                </small>
+                                                            </div>
+                                                            <div class="text-success fw-bold text-nowrap">
+                                                                <small>€@transaction.Amount.ToString("N0")</small>
+                                                            </div>
+                                                        </div>
+                                                    }
                                                 }
                                                 else
                                                 {
@@ -122,21 +120,19 @@
                                             <div class="card-body">
                                                 @if (group.ExpenseTransactions.Any())
                                                 {
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-borderless">
-                                                            <tbody>
-                                                                @foreach (var transaction in group.ExpenseTransactions)
-                                                                {
-                                                                    <tr>
-                                                                        <td class="ps-0">@transaction.Category</td>
-                                                                        <td class="text-end pe-0 text-danger fw-bold">
-                                                                            €@Math.Abs(transaction.Amount).ToString("N2")
-                                                                        </td>
-                                                                    </tr>
-                                                                }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                    @foreach (var transaction in group.ExpenseTransactions)
+                                                    {
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div class="me-2" style="min-width: 0; flex: 1;">
+                                                                <small class="text-truncate d-block" title="@transaction.Category">
+                                                                    @transaction.Category
+                                                                </small>
+                                                            </div>
+                                                            <div class="text-danger fw-bold text-nowrap">
+                                                                <small>€@Math.Abs(transaction.Amount).ToString("N0")</small>
+                                                            </div>
+                                                        </div>
+                                                    }
                                                 }
                                                 else
                                                 {
@@ -316,7 +312,9 @@
             });
         </script>
     }
-}\n\n@functions {
+}
+
+@functions {
     private string GetTypeBadgeClass(TransactionType type)
     {
         return type switch
