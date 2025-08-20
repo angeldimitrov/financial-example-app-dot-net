@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using FinanceApp.Web.Data;
 using FinanceApp.Web.Services;
 
 namespace FinanceApp.Web.Pages;
@@ -10,6 +12,8 @@ public class IndexModel : PageModel
     private readonly DataImportService _dataImport;
     private readonly IFileValidationService _fileValidation;
     private readonly IInputSanitizationService _inputSanitization;
+    private readonly CsvExportService _csvExport;
+    private readonly AppDbContext _context;
     private readonly ILogger<IndexModel> _logger;
     
     public List<MonthSummary>? MonthlySummaries { get; set; }
@@ -24,12 +28,16 @@ public class IndexModel : PageModel
         DataImportService dataImport,
         IFileValidationService fileValidation,
         IInputSanitizationService inputSanitization,
+        CsvExportService csvExport,
+        AppDbContext context,
         ILogger<IndexModel> logger)
     {
         _pdfParser = pdfParser;
         _dataImport = dataImport;
         _fileValidation = fileValidation;
         _inputSanitization = inputSanitization;
+        _csvExport = csvExport;
+        _context = context;
         _logger = logger;
     }
     
@@ -100,5 +108,63 @@ public class IndexModel : PageModel
         
         // Reload the page with updated data
         return RedirectToPage();
+    }
+    
+    /**
+     * Handler for CSV export functionality
+     * 
+     * Business Logic:
+     * - Retrieves all financial periods with their transaction lines
+     * - Generates CSV with German formatting (1.234,56)
+     * - Returns file download with appropriate headers
+     * - Handles empty data gracefully with user feedback
+     * 
+     * Security considerations:
+     * - No user input processed (GET request only)
+     * - Data filtered through EF Core queries
+     * - File content generated in memory (no file system access)
+     */
+    public async Task<IActionResult> OnGetExportCsvAsync()
+    {
+        try
+        {
+            _logger.LogInformation("CSV export requested");
+            
+            // Retrieve all financial periods with their transaction lines
+            // Include transaction lines for revenue/expense calculations
+            var periods = await _context.FinancialPeriods
+                .Include(p => p.TransactionLines)
+                .OrderBy(p => p.Year)
+                .ThenBy(p => p.Month)
+                .ToListAsync();
+            
+            // Check if we have data to export
+            if (!periods.Any())
+            {
+                TempData["Warning"] = "Keine Daten zum Exportieren vorhanden. Bitte laden Sie zuerst eine PDF-Datei hoch.";
+                _logger.LogWarning("CSV export attempted with no data available");
+                return RedirectToPage();
+            }
+            
+            // Generate CSV content
+            var csvContent = await _csvExport.GenerateCsvAsync(periods);
+            var fileName = _csvExport.GenerateFileName(periods);
+            
+            _logger.LogInformation("CSV export successful: {FileName}, Size: {Size} bytes", 
+                fileName, csvContent.Length);
+            
+            // Return file download with proper MIME type for CSV
+            return File(
+                csvContent,
+                "text/csv; charset=utf-8",
+                fileName
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during CSV export");
+            TempData["Error"] = "Fehler beim Exportieren der Daten. Bitte versuchen Sie es erneut.";
+            return RedirectToPage();
+        }
     }
 }
