@@ -8,6 +8,8 @@ public class IndexModel : PageModel
 {
     private readonly PdfParserService _pdfParser;
     private readonly DataImportService _dataImport;
+    private readonly IFileValidationService _fileValidation;
+    private readonly IInputSanitizationService _inputSanitization;
     private readonly ILogger<IndexModel> _logger;
     
     public List<MonthSummary>? MonthlySummaries { get; set; }
@@ -20,10 +22,14 @@ public class IndexModel : PageModel
     public IndexModel(
         PdfParserService pdfParser,
         DataImportService dataImport,
+        IFileValidationService fileValidation,
+        IInputSanitizationService inputSanitization,
         ILogger<IndexModel> logger)
     {
         _pdfParser = pdfParser;
         _dataImport = dataImport;
+        _fileValidation = fileValidation;
+        _inputSanitization = inputSanitization;
         _logger = logger;
     }
     
@@ -47,29 +53,23 @@ public class IndexModel : PageModel
     
     public async Task<IActionResult> OnPostAsync(IFormFile pdfFile)
     {
-        if (pdfFile == null || pdfFile.Length == 0)
+        // Validate file using security service
+        var validationResult = await _fileValidation.ValidateUploadedFileAsync(pdfFile);
+        if (!validationResult.IsValid)
         {
-            TempData["Error"] = "Please select a PDF file to upload.";
-            return Page();
-        }
-        
-        if (!pdfFile.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-        {
-            TempData["Error"] = "Please upload a valid PDF file.";
-            return Page();
-        }
-        
-        if (pdfFile.Length > 10 * 1024 * 1024) // 10MB limit
-        {
-            TempData["Error"] = "File size exceeds 10MB limit.";
+            TempData["Error"] = validationResult.Message;
+            _logger.LogWarning($"File validation failed: {validationResult.Message}");
             return Page();
         }
         
         try
         {
+            // Sanitize the file name before processing
+            var safeFileName = _inputSanitization.SanitizeFileName(pdfFile.FileName);
+            
             // Parse the PDF
             using var stream = pdfFile.OpenReadStream();
-            var parsedData = await _pdfParser.ParsePdfAsync(stream, pdfFile.FileName);
+            var parsedData = await _pdfParser.ParsePdfAsync(stream, safeFileName);
             
             // Import to database
             var importResult = await _dataImport.ImportDataAsync(parsedData);
@@ -90,12 +90,12 @@ public class IndexModel : PageModel
                 TempData["Error"] = importResult.Message;
             }
             
-            _logger.LogInformation($"PDF upload processed: {pdfFile.FileName} - {importResult.Message}");
+            _logger.LogInformation($"PDF upload processed: {safeFileName} - {importResult.Message}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error processing PDF upload: {pdfFile.FileName}");
-            TempData["Error"] = $"An error occurred while processing the PDF: {ex.Message}";
+            _logger.LogError(ex, $"Error processing PDF upload: {pdfFile?.FileName}");
+            TempData["Error"] = "Ein Fehler ist beim Verarbeiten der PDF-Datei aufgetreten.";
         }
         
         // Reload the page with updated data

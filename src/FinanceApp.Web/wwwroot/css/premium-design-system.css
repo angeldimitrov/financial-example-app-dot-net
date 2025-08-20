@@ -133,8 +133,7 @@
    TYPOGRAPHY SYSTEM
    ============================================================================ */
 
-/* Import premium Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Premium Google Fonts are loaded in _Layout.cshtml for better performance */
 
 /* Base typography styles */
 body {
@@ -474,22 +473,20 @@ body {
    PREMIUM ANIMATIONS & MICRO-INTERACTIONS
    ============================================================================ */
 
-/* Subtle page entrance animations */
-@keyframes slideInUp {
+/* Professional subtle entrance animations - Simplified for financial applications */
+@keyframes subtleFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateX(-8px);
   }
   to {
     opacity: 1;
@@ -502,17 +499,17 @@ body {
   to { opacity: 1; }
 }
 
-/* Apply animations to main content areas */
+/* Apply subtle animations to main content areas - Professional financial application style */
 .animate-in {
-  animation: slideInUp var(--timing-slower) var(--easing-ease-out);
+  animation: subtleFadeIn var(--timing-fast) var(--easing-ease-out);
 }
 
 .animate-in-left {
-  animation: slideInLeft var(--timing-slower) var(--easing-ease-out);
+  animation: slideInLeft var(--timing-normal) var(--easing-ease-out);
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--timing-slow) var(--easing-ease-out);
+  animation: fadeIn var(--timing-fast) var(--easing-ease-out);
 }
 
 /* Loading state animations */

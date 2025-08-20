@@ -8,19 +8,50 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();
 
+// Configure connection string with environment variable fallback for production
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString) && builder.Environment.IsProduction())
+{
+    // In production, prefer environment variable for security
+    connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Database connection string not configured. Set DATABASE_CONNECTION_STRING environment variable.");
+    }
+}
+
 // Configure Entity Framework with PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Register application services
 builder.Services.AddScoped<PdfParserService>();
 builder.Services.AddScoped<DataImportService>();
 builder.Services.AddScoped<ITrendAnalysisService, TrendAnalysisService>();
 
-// Configure file upload size limits
+// Register security services
+builder.Services.AddScoped<IFileValidationService, FileValidationService>();
+builder.Services.AddScoped<IInputSanitizationService, InputSanitizationService>();
+
+// Configure file upload size limits from configuration
+var maxUploadSize = builder.Configuration.GetValue<int>("Security:MaxUploadSizeInMB", 10);
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB limit
+    options.MultipartBodyLengthLimit = maxUploadSize * 1024 * 1024;
+});
+
+// Configure Kestrel server limits
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = maxUploadSize * 1024 * 1024;
+});
+
+// Add security headers
+builder.Services.AddHsts(options =>
+{
+    options.Preload = true;
+    options.IncludeSubDomains = true;
+    options.MaxAge = TimeSpan.FromDays(365);
 });
 
 // Add logging
@@ -34,6 +65,28 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+// Add security headers middleware
+app.Use(async (context, next) =>
+{
+    // Prevent XSS attacks
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    
+    // Content Security Policy optimized for German Finance Application
+    // Allows Chart.js, Bootstrap Icons, Google Fonts, and other required resources
+    context.Response.Headers.Add("Content-Security-Policy", 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com; " +
+        "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com cdn.jsdelivr.net; " +
+        "img-src 'self' data: blob:; " +
+        "connect-src 'self' fonts.googleapis.com fonts.gstatic.com;");
+    
+    await next();
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

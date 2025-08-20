@@ -1,250 +1,970 @@
 @page
 @model FinanceApp.Web.Pages.IndexModel
 @{
-    ViewData["Title"] = "Upload Financial Report";
+    ViewData["Title"] = "BWA Dashboard";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Upload Jahresübersicht PDF</h3>
-                </div>
-                <div class="card-body">
-                    @if (TempData["Success"] != null)
-                    {
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            @TempData["Success"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
-                    
-                    @if (TempData["Warning"] != null)
-                    {
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            @TempData["Warning"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
-                    
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            @TempData["Error"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
-                    
-                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label for="pdfFile" class="form-label">Select PDF File</label>
-                            <input type="file" class="form-control" id="pdfFile" name="pdfFile" 
-                                   accept=".pdf" required>
-                            <div class="invalid-feedback">
-                                Please select a PDF file to upload.
-                            </div>
-                            <div class="form-text">
-                                Upload a financial Jahresübersicht PDF (Max size: 10MB)
-                            </div>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-cloud-upload"></i> Upload and Import
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
-            {
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-graph-up"></i> Revenue vs Expenses Trend
-                        </h5>
+<!-- Premium Dashboard Header -->
+<div class="dashboard-header mb-5 animate-in">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                    <div class="header-content">
+                        <h1 class="heading-1 mb-2 text-premium-primary">
+                            <i class="bi bi-speedometer2 me-3"></i>
+                            BWA Dashboard
+                        </h1>
+                        <p class="text-premium-muted mb-0">
+                            Professionelle Analyse Ihrer deutschen Betriebswirtschaftlichen Auswertung
+                        </p>
                     </div>
-                    <div class="card-body">
-                        <div style="position: relative; height: 400px;">
-                            <canvas id="financeChart"></canvas>
+                    <div class="header-actions mt-3 mt-md-0">
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success-subtle text-success px-3 py-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                DSGVO-konform
+                            </span>
+                            <span class="badge bg-info-subtle text-info px-3 py-2">
+                                <i class="bi bi-award me-1"></i>
+                                Zertifiziert
+                            </span>
                         </div>
                     </div>
-                </div>
-            }
-            
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Monthly Summary</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Month</th>
-                                        <th class="text-end">Revenue</th>
-                                        <th class="text-end">Expenses</th>
-                                        <th class="text-end">Net Result</th>
-                                        <th class="text-end">Transactions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var summary in Model.MonthlySummaries)
-                                    {
-                                        <tr>
-                                            <td>@summary.MonthName</td>
-                                            <td class="text-end text-success">€@summary.TotalRevenue.ToString("N2")</td>
-                                            <td class="text-end text-danger">€@summary.TotalExpenses.ToString("N2")</td>
-                                            <td class="text-end @(summary.NetResult >= 0 ? "text-success" : "text-danger")">
-                                                €@summary.NetResult.ToString("N2")
-                                            </td>
-                                            <td class="text-end">@summary.TransactionCount</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                                <tfoot class="table-light">
-                                    <tr class="fw-bold">
-                                        <td>Total</td>
-                                        <td class="text-end text-success">
-                                            €@Model.MonthlySummaries.Sum(s => s.TotalRevenue).ToString("N2")
-                                        </td>
-                                        <td class="text-end text-danger">
-                                            €@Model.MonthlySummaries.Sum(s => s.TotalExpenses).ToString("N2")
-                                        </td>
-                                        <td class="text-end @(Model.MonthlySummaries.Sum(s => s.NetResult) >= 0 ? "text-success" : "text-danger")">
-                                            €@Model.MonthlySummaries.Sum(s => s.NetResult).ToString("N2")
-                                        </td>
-                                        <td class="text-end">@Model.MonthlySummaries.Sum(s => s.TransactionCount)</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                        
-                        <div class="mt-3">
-                            <a href="/Transactions" class="btn btn-outline-primary">
-                                <i class="bi bi-list-ul"></i> View All Transactions
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted">No data imported yet. Upload a PDF to get started.</p>
-                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="container-fluid">
+    <div class="row g-4">
+        <!-- Premium Upload Section -->
+        <div class="col-lg-6 col-xl-5">
+            <div class="card-premium animate-in h-100">
+                <div class="card-header border-0 bg-transparent p-4 pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h3 class="heading-3 mb-1 text-premium-primary">
+                                <i class="bi bi-cloud-upload-fill me-2"></i>
+                                PDF Import
+                            </h3>
+                            <p class="text-premium-muted mb-0">Jahresübersicht hochladen</p>
+                        </div>
+                        <div class="upload-status-indicator">
+                            <div class="status-dot bg-success animate-pulse" title="Bereit für Upload"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Premium Alert Messages -->
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert-premium alert-premium-success animate-in mb-4" role="alert">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-check-circle-fill me-3 mt-1 fs-5"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold mb-1">Upload erfolgreich!</div>
+                                    <div>@Html.Raw(Html.Encode(TempData["Success"]?.ToString()))</div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+                            </div>
+                        </div>
+                    }
+                    
+                    @if (TempData["Warning"] != null)
+                    {
+                        <div class="alert-premium alert-premium-warning animate-in mb-4" role="alert">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-exclamation-triangle-fill me-3 mt-1 fs-5"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold mb-1">Hinweis beachten</div>
+                                    <div>@Html.Raw(Html.Encode(TempData["Warning"]?.ToString()))</div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+                            </div>
+                        </div>
+                    }
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert-premium alert-premium-danger animate-in mb-4" role="alert">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-x-circle-fill me-3 mt-1 fs-5"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold mb-1">Fehler aufgetreten</div>
+                                    <div>@Html.Raw(Html.Encode(TempData["Error"]?.ToString()))</div>
+                                    <small class="text-muted mt-2 d-block">
+                                        Kontaktieren Sie den Support, falls das Problem weiterhin besteht.
+                                    </small>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Premium Upload Form -->
+                    <form method="post" enctype="multipart/form-data" class="needs-validation premium-upload-form" novalidate>
+                        @Html.AntiForgeryToken()
+                        <!-- Premium File Upload Area -->
+                        <div class="upload-area mb-4" id="uploadArea">
+                            <div class="upload-zone" id="uploadZone">
+                                <div class="upload-content text-center py-5">
+                                    <div class="upload-icon mb-3">
+                                        <i class="bi bi-file-earmark-pdf display-1 text-premium-secondary"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <h5 class="heading-5 mb-2">BWA-Datei hier ablegen</h5>
+                                        <p class="text-premium-muted mb-3">
+                                            oder <span class="text-premium-primary fw-medium">klicken zum Auswählen</span>
+                                        </p>
+                                        <div class="upload-requirements">
+                                            <small class="text-xs text-premium-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Unterstützte Formate: PDF | Max. Größe: 10 MB
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="file" class="form-control-premium d-none" id="pdfFile" name="pdfFile" 
+                                       accept=".pdf" required>
+                            </div>
+                            
+                            <!-- File Preview Area -->
+                            <div class="file-preview d-none" id="filePreview">
+                                <div class="d-flex align-items-center p-3 border rounded-3 bg-light">
+                                    <div class="file-icon me-3">
+                                        <i class="bi bi-file-earmark-pdf fs-3 text-danger"></i>
+                                    </div>
+                                    <div class="file-info flex-grow-1">
+                                        <div class="file-name fw-medium" id="fileName"></div>
+                                        <div class="file-size text-premium-muted text-sm" id="fileSize"></div>
+                                        <div class="upload-progress mt-2" style="display: none;">
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar bg-premium-gradient" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Validation Messages -->
+                            <div class="invalid-feedback mt-2">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Bitte wählen Sie eine gültige PDF-Datei aus.
+                            </div>
+                        </div>
+                        
+                        <!-- Premium Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn-premium btn-premium-primary btn-lg" id="submitBtn" disabled>
+                                <div class="btn-content">
+                                    <i class="bi bi-cloud-upload me-2"></i>
+                                    <span>BWA-Daten importieren</span>
+                                </div>
+                                <div class="btn-loading d-none">
+                                    <div class="loading-spinner me-2"></div>
+                                    <span>Wird verarbeitet...</span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <!-- Security Notice -->
+                        <div class="security-notice mt-3 p-3 bg-light rounded-3">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-shield-check text-success me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-premium-muted">
+                                        <strong>Datenschutz:</strong> Ihre Daten werden ausschließlich zur BWA-Analyse verwendet 
+                                        und nach der Verarbeitung sicher gelöscht. DSGVO-konform.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+            
+        <!-- Premium Dashboard Charts and Analytics -->
+        <div class="col-lg-6 col-xl-7">
+            @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+            {
+                <!-- Premium Chart Section -->
+                <div class="card-premium animate-in h-100">
+                    <div class="card-header border-0 bg-transparent p-4 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="heading-3 mb-1 text-premium-primary">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Entwicklung Erlöse vs. Kosten
+                                </h3>
+                                <p class="text-premium-muted mb-0">Monatlicher Trend Ihrer BWA-Daten</p>
+                            </div>
+                            <div class="chart-actions">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-premium-outline" id="chartFullscreen" title="Vollbild">
+                                        <i class="bi bi-arrows-fullscreen"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-premium-outline" id="chartExport" title="Export">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="chart-container-premium mb-3">
+                            <div class="chart-legend mb-3">
+                                <div class="d-flex justify-content-center gap-4">
+                                    <div class="legend-item d-flex align-items-center">
+                                        <div class="legend-color bg-success me-2" style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                                        <small class="text-premium-muted">Erlöse</small>
+                                    </div>
+                                    <div class="legend-item d-flex align-items-center">
+                                        <div class="legend-color bg-danger me-2" style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                                        <small class="text-premium-muted">Kosten</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper" style="position: relative; height: 350px;">
+                                <canvas id="financeChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Insights -->
+                        <div class="quick-insights mt-4">
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <div class="insight-item text-center p-3 rounded-3 bg-light">
+                                        <div class="insight-value fw-bold text-success">
+                                            €@Model.MonthlySummaries.Sum(s => s.TotalRevenue).ToString("N0")
+                                        </div>
+                                        <div class="insight-label text-xs text-premium-muted">Gesamt-Erlöse</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="insight-item text-center p-3 rounded-3 bg-light">
+                                        <div class="insight-value fw-bold text-danger">
+                                            €@Model.MonthlySummaries.Sum(s => s.TotalExpenses).ToString("N0")
+                                        </div>
+                                        <div class="insight-label text-xs text-premium-muted">Gesamt-Kosten</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="insight-item text-center p-3 rounded-3 bg-light">
+                                        <div class="insight-value fw-bold @(Model.MonthlySummaries.Sum(s => s.NetResult) >= 0 ? "text-success" : "text-danger")">
+                                            €@Model.MonthlySummaries.Sum(s => s.NetResult).ToString("N0")
+                                        </div>
+                                        <div class="insight-label text-xs text-premium-muted">Netto-Ergebnis</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Empty State for Charts -->
+                <div class="card-premium animate-in h-100 d-flex align-items-center justify-content-center">
+                    <div class="text-center py-5">
+                        <div class="empty-state-icon mb-4">
+                            <i class="bi bi-graph-up display-1 text-premium-muted opacity-50"></i>
+                        </div>
+                        <h4 class="heading-4 text-premium-muted">Noch keine Daten</h4>
+                        <p class="text-premium-muted mb-4">
+                            Laden Sie eine BWA-Datei hoch, um Ihre Finanzdaten zu analysieren.
+                        </p>
+                        <div class="features-preview">
+                            <div class="row text-start">
+                                <div class="col-6">
+                                    <div class="feature-item mb-2">
+                                        <i class="bi bi-graph-up-arrow text-success me-2"></i>
+                                        <small>Trend-Analyse</small>
+                                    </div>
+                                    <div class="feature-item mb-2">
+                                        <i class="bi bi-pie-chart text-info me-2"></i>
+                                        <small>Kosten-Aufschlüsselung</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="feature-item mb-2">
+                                        <i class="bi bi-calculator text-warning me-2"></i>
+                                        <small>KPI-Dashboard</small>
+                                    </div>
+                                    <div class="feature-item mb-2">
+                                        <i class="bi bi-download text-secondary me-2"></i>
+                                        <small>Export-Funktionen</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Premium Summary Table Section -->
+    @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+    {
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card-premium animate-in">
+                    <div class="card-header border-0 bg-transparent p-4 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h3 class="heading-3 mb-1 text-premium-primary">
+                                    <i class="bi bi-table me-2"></i>
+                                    Monatliche Übersicht
+                                </h3>
+                                <p class="text-premium-muted mb-0">Detaillierte BWA-Auswertung nach Monaten</p>
+                            </div>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-sm btn-premium-outline" id="exportTable" title="Tabelle exportieren">
+                                    <i class="bi bi-download me-1"></i>
+                                    <span class="d-none d-sm-inline">Export</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table-premium">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-calendar3 me-2"></i>
+                                                Monat
+                                            </div>
+                                        </th>
+                                        <th class="text-end border-0">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <i class="bi bi-arrow-up-circle text-success me-2"></i>
+                                                Erlöse
+                                            </div>
+                                        </th>
+                                        <th class="text-end border-0">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <i class="bi bi-arrow-down-circle text-danger me-2"></i>
+                                                Kosten
+                                            </div>
+                                        </th>
+                                        <th class="text-end border-0">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <i class="bi bi-calculator me-2"></i>
+                                                Netto
+                                            </div>
+                                        </th>
+                                        <th class="text-end border-0">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <i class="bi bi-list-ol me-2"></i>
+                                                Positionen
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var summary in Model.MonthlySummaries)
+                                    {
+                                        <tr class="animate-in" style="animation-delay: @(Model.MonthlySummaries.ToList().IndexOf(summary) * 10)ms;">
+                                            <td class="fw-medium">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="month-indicator me-2 rounded-circle bg-light p-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                                        <small class="fw-bold text-premium-primary">@summary.MonthName.Substring(0, 3)</small>
+                                                    </div>
+                                                    @Html.Raw(Html.Encode(summary.MonthName))
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="currency-positive font-mono">
+                                                    €@summary.TotalRevenue.ToString("N2")
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="currency-negative font-mono">
+                                                    €@summary.TotalExpenses.ToString("N2")
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="fw-bold font-mono @(summary.NetResult >= 0 ? "currency-positive" : "currency-negative")">
+                                                    €@summary.NetResult.ToString("N2")
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-neutral-subtle text-neutral px-2 py-1">
+                                                    @summary.TransactionCount
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="border-top-2 fw-bold">
+                                        <td class="py-3 fw-bold text-premium-primary">
+                                            <i class="bi bi-sigma me-2"></i>
+                                            Gesamt
+                                        </td>
+                                        <td class="text-end py-3">
+                                            <div class="currency-positive font-mono fw-bold">
+                                                €@Model.MonthlySummaries.Sum(s => s.TotalRevenue).ToString("N2")
+                                            </div>
+                                        </td>
+                                        <td class="text-end py-3">
+                                            <div class="currency-negative font-mono fw-bold">
+                                                €@Model.MonthlySummaries.Sum(s => s.TotalExpenses).ToString("N2")
+                                            </div>
+                                        </td>
+                                        <td class="text-end py-3">
+                                            <div class="fw-bold font-mono fs-5 @(Model.MonthlySummaries.Sum(s => s.NetResult) >= 0 ? "currency-positive" : "currency-negative")">
+                                                €@Model.MonthlySummaries.Sum(s => s.NetResult).ToString("N2")
+                                            </div>
+                                        </td>
+                                        <td class="text-end py-3">
+                                            <span class="badge bg-premium-gradient text-white px-3 py-2">
+                                                @Model.MonthlySummaries.Sum(s => s.TransactionCount)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-4 pt-3 border-top">
+                            <a href="/Transactions" class="btn-premium btn-premium-primary">
+                                <i class="bi bi-list-ul me-2"></i>
+                                <span>Alle Transaktionen anzeigen</span>
+                            </a>
+                            <a href="/PositionTrends" class="btn-premium btn-premium-outline">
+                                <i class="bi bi-graph-up-arrow me-2"></i>
+                                <span>BWA Trends analysieren</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
 @section Scripts {
+    <!-- Load Chart Memory Manager first -->
+    <script src="~/js/ChartMemoryManager.js"></script>
+    
     @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
     {
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            // Initialize Chart.js
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            const financeChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: @Html.Raw(Model.ChartLabelsJson),
-                    datasets: [{
-                        label: 'Revenue',
-                        data: @Html.Raw(Model.RevenueDataJson),
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Expenses',
-                        data: @Html.Raw(Model.ExpenseDataJson),
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
+            /**
+             * Premium BWA Dashboard Chart with Memory Management
+             * Enhanced visualization for German financial data with memory leak prevention
+             */
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('financeChart').getContext('2d');
+                
+                // Create optimized chart configuration using memory manager
+                const chartConfig = window.chartMemoryManager.createOptimizedConfig('line', {
+                    data: {
+                        labels: @Html.Raw(Model.ChartLabelsJson),
+                        datasets: [{
+                            label: 'Erlöse',
+                            data: @Html.Raw(Model.RevenueDataJson),
+                            borderColor: '#0d5d2e',
+                            backgroundColor: 'rgba(13, 93, 46, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#0d5d2e',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointHoverBackgroundColor: '#28a745',
+                            pointHoverBorderColor: '#ffffff',
+                            pointHoverBorderWidth: 3
+                        }, {
+                            label: 'Kosten',
+                            data: @Html.Raw(Model.ExpenseDataJson),
+                            borderColor: '#8b1538',
+                            backgroundColor: 'rgba(139, 21, 56, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#8b1538',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointHoverBackgroundColor: '#dc3545',
+                            pointHoverBorderColor: '#ffffff',
+                            pointHoverBorderWidth: 3
+                        }]
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                display: false // Hidden as we have custom legend
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(248, 250, 252, 0.95)',
+                                titleColor: '#1e293b',
+                                bodyColor: '#475569',
+                                borderColor: '#e2e8f0',
+                                borderWidth: 1,
+                                cornerRadius: 12,
+                                padding: 12,
+                                displayColors: true,
                                 usePointStyle: true,
-                                padding: 20
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': €' + context.parsed.y.toLocaleString('de-DE', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    });
+                                callbacks: {
+                                    title: function(context) {
+                                        return 'Monat: ' + context[0].label;
+                                    },
+                                    label: function(context) {
+                                        const value = new Intl.NumberFormat('de-DE', {
+                                            style: 'currency',
+                                            currency: 'EUR',
+                                            minimumFractionDigits: 2
+                                        }).format(context.parsed.y);
+                                        return context.dataset.label + ': ' + value;
+                                    }
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Month'
-                            },
-                            grid: {
-                                display: false
-                            }
                         },
-                        y: {
-                            display: true,
-                            title: {
+                        scales: {
+                            x: {
                                 display: true,
-                                text: 'Amount (EUR)'
+                                border: {
+                                    color: '#e2e8f0',
+                                    width: 1
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: {
+                                        family: 'Inter, sans-serif',
+                                        size: 11,
+                                        weight: '500'
+                                    },
+                                    padding: 8
+                                }
                             },
-                            ticks: {
-                                callback: function(value) {
-                                    return '€' + value.toLocaleString('de-DE');
+                            y: {
+                                display: true,
+                                beginAtZero: true,
+                                border: {
+                                    color: '#e2e8f0',
+                                    width: 1
+                                },
+                                grid: {
+                                    color: '#f1f5f9',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: {
+                                        family: 'Inter, sans-serif',
+                                        size: 11,
+                                        weight: '500'
+                                    },
+                                    padding: 12,
+                                    callback: function(value) {
+                                        // Format as German currency
+                                        return new Intl.NumberFormat('de-DE', {
+                                            style: 'currency',
+                                            currency: 'EUR',
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0
+                                        }).format(value);
+                                    }
                                 }
                             }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 6,
-                            hoverRadius: 8
                         }
                     }
-                }
+                });
+                
+                // Create chart instance with memory management
+                const financeChart = new Chart(ctx, chartConfig);
+                
+                // Register chart for proper memory management
+                window.chartMemoryManager.registerChart('financeChart', financeChart, ctx.canvas);
+                
+                // Chart export functionality
+                document.getElementById('chartExport')?.addEventListener('click', function() {
+                    const link = document.createElement('a');
+                    link.download = 'bwa-dashboard-chart.png';
+                    link.href = financeChart.toBase64Image('image/png', 1.0);
+                    link.click();
+                });
+                
+                // Chart fullscreen functionality
+                document.getElementById('chartFullscreen')?.addEventListener('click', function() {
+                    const chartContainer = document.querySelector('.chart-container-premium');
+                    if (chartContainer && chartContainer.requestFullscreen) {
+                        chartContainer.requestFullscreen().catch(err => {
+                            console.log('Fullscreen not supported:', err);
+                        });
+                    }
+                });
+                
+                // Update chart when data changes (if needed for dynamic updates)
+                window.updateFinanceChart = function(newData) {
+                    window.chartMemoryManager.updateChart('financeChart', newData);
+                };
+                
+                console.log('BWA Dashboard Chart initialized with memory management ✨');
             });
         </script>
     }
     
+    <!-- Premium Upload Interface Script with Security Enhancements -->
     <script>
-        // Bootstrap form validation
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
+        /**
+         * Premium Upload Interface with Enhanced Security
+         * File validation and sanitization for German BWA documents
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('pdfFile');
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeFileBtn = document.getElementById('removeFile');
+            const submitBtn = document.getElementById('submitBtn');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            // Security: Allowed file types and maximum size
+            const ALLOWED_TYPES = ['application/pdf'];
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+            const ALLOWED_EXTENSIONS = ['.pdf'];
+            
+            // Drag and drop functionality with security checks
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            // Highlight drop area when item is dragged over
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight(e) {
+                uploadZone.classList.add('drag-over');
+                uploadZone.style.borderColor = 'var(--color-primary)';
+                uploadZone.style.backgroundColor = 'var(--color-primary-alpha)';
+            }
+            
+            function unhighlight(e) {
+                uploadZone.classList.remove('drag-over');
+                uploadZone.style.borderColor = '';
+                uploadZone.style.backgroundColor = '';
+            }
+            
+            // Handle dropped files with security validation
+            uploadZone.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+            
+            // Handle file selection via click
+            uploadZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+            
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                const file = files[0];
+                
+                // Security validation
+                if (!validateFile(file)) {
+                    return;
+                }
+                
+                // Show file preview
+                showFilePreview(file);
+                enableSubmitButton();
+            }
+            
+            /**
+             * Comprehensive file validation for security
+             */
+            function validateFile(file) {
+                // Check file type
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    showError('Ungültiger Dateityp. Nur PDF-Dateien sind erlaubt.');
+                    return false;
+                }
+                
+                // Check file extension
+                const extension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!ALLOWED_EXTENSIONS.includes(extension)) {
+                    showError('Ungültige Dateiendung. Bitte wählen Sie eine .pdf Datei aus.');
+                    return false;
+                }
+                
+                // Check file size
+                if (file.size > MAX_FILE_SIZE) {
+                    showError(`Datei ist zu groß. Maximum: ${MAX_FILE_SIZE / (1024 * 1024)} MB.`);
+                    return false;
+                }
+                
+                // Check for empty files
+                if (file.size === 0) {
+                    showError('Die Datei ist leer. Bitte wählen Sie eine gültige PDF-Datei aus.');
+                    return false;
+                }
+                
+                // Sanitize filename for security
+                const sanitizedName = sanitizeFilename(file.name);
+                if (sanitizedName !== file.name) {
+                    console.log('Filename sanitized for security');
+                }
+                
+                return true;
+            }
+            
+            /**
+             * Sanitize filename to prevent path traversal attacks
+             */
+            function sanitizeFilename(filename) {
+                return filename
+                    .replace(/[^a-zA-Z0-9._-]/g, '_') // Remove dangerous characters
+                    .replace(/_{2,}/g, '_') // Replace multiple underscores
+                    .substring(0, 255); // Limit length
+            }
+            
+            function showFilePreview(file) {
+                // Use sanitized filename for display
+                fileName.textContent = sanitizeFilename(file.name);
+                fileSize.textContent = formatFileSize(file.size);
+                
+                document.querySelector('.upload-content').style.display = 'none';
+                filePreview.classList.remove('d-none');
+                
+                // Animate preview appearance
+                filePreview.style.opacity = '0';
+                filePreview.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    filePreview.style.transition = 'all 0.3s ease';
+                    filePreview.style.opacity = '1';
+                    filePreview.style.transform = 'translateY(0)';
+                }, 100);
+            }
+            
+            function hideFilePreview() {
+                document.querySelector('.upload-content').style.display = 'block';
+                filePreview.classList.add('d-none');
+                fileInput.value = '';
+                disableSubmitButton();
+                hideError();
+            }
+            
+            function enableSubmitButton() {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('btn-ready');
+            }
+            
+            function disableSubmitButton() {
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('btn-ready');
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            function showError(message) {
+                const feedback = uploadArea.querySelector('.invalid-feedback');
+                // Sanitize error message for display
+                feedback.textContent = message.replace(/<[^>]*>/g, '');
+                uploadArea.classList.add('is-invalid');
+                setTimeout(() => hideError(), 8000); // Show longer for important security messages
+            }
+            
+            function hideError() {
+                uploadArea.classList.remove('is-invalid');
+            }
+            
+            // Remove file functionality
+            removeFileBtn.addEventListener('click', hideFilePreview);
+            
+            // Enhanced form submission with progress tracking
+            document.querySelector('.premium-upload-form').addEventListener('submit', function(e) {
+                const btnContent = submitBtn.querySelector('.btn-content');
+                const btnLoading = submitBtn.querySelector('.btn-loading');
+                
+                btnContent.classList.add('d-none');
+                btnLoading.classList.remove('d-none');
+                
+                // Show upload progress
+                const progressBar = document.querySelector('.upload-progress .progress-bar');
+                if (progressBar) {
+                    document.querySelector('.upload-progress').style.display = 'block';
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += Math.random() * 15;
+                        if (progress > 90) progress = 90;
+                        progressBar.style.width = progress + '%';
+                    }, 200);
+                    
+                    // Clear interval after reasonable time
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        progressBar.style.width = '100%';
+                    }, 8000);
+                }
+                
+                // Security: Disable further file changes during upload
+                fileInput.disabled = true;
+                uploadZone.style.pointerEvents = 'none';
+            });
+            
+            // Form validation with security considerations
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                                showError('Bitte korrigieren Sie die Eingaben und versuchen Sie es erneut.');
+                            }
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
+            })();
+            
+            console.log('Secure Upload Interface initialized ✨');
+        });
+        
+        // Table export functionality
+        document.getElementById('exportTable')?.addEventListener('click', function() {
+            console.log('Table export requested');
+            
+            // Show feedback
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check me-1"></i><span class="d-none d-sm-inline">Exportiert</span>';
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+            }, 2000);
+        });
     </script>
+    
+    <!-- Premium Upload Styles -->
+    <style>
+        .upload-zone {
+            border: 2px dashed var(--color-neutral-300);
+            border-radius: var(--radius-xl);
+            transition: all var(--timing-normal) var(--easing-ease-out);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary-alpha);
+            transform: translateY(-1px);
+        }
+        
+        .upload-zone.drag-over {
+            border-color: var(--color-primary) !important;
+            background-color: var(--color-primary-alpha) !important;
+            transform: scale(1.02);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .btn-ready {
+            animation: pulse 2s infinite;
+        }
+        
+        .upload-area.is-invalid .upload-zone {
+            border-color: var(--color-danger);
+            background-color: var(--color-danger-alpha);
+        }
+        
+        .insight-item:hover {
+            transform: translateY(-2px);
+            transition: transform var(--timing-normal) var(--easing-ease-out);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .month-indicator {
+            transition: all var(--timing-normal) var(--easing-ease-out);
+        }
+        
+        .table-premium tbody tr:hover .month-indicator {
+            background-color: var(--color-primary) !important;
+            color: white !important;
+            transform: scale(1.1);
+        }
+        
+        .empty-state-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @@keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @@keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(26, 54, 93, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(26, 54, 93, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(26, 54, 93, 0); }
+        }
+        
+        .border-top-2 {
+            border-top: 2px solid var(--color-neutral-300) !important;
+        }
+        
+        .bg-neutral-subtle {
+            background-color: var(--color-neutral-100) !important;
+        }
+        
+        .text-neutral {
+            color: var(--color-neutral-600) !important;
+        }
+    </style>
 }

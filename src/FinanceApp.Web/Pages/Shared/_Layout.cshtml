@@ -3,58 +3,301 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Finance Import App</title>
+    <title>@ViewData["Title"] - FinanzPro BWA Analytics</title>
+    
+    <!-- Premium Design System -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar-brand {
-            font-weight: bold;
-        }
-    </style>
+    <link href="~/css/premium-design-system.css" rel="stylesheet" />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Load Inter font family for premium design -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Meta tags for premium experience -->
+    <meta name="description" content="Professional German BWA financial analysis platform">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="color-scheme" content="light">
+    
+    <!-- Favicon and app icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" href="/">
-                    <i class="bi bi-graph-up"></i> Finance Import
+<body class="animate-fade-in">
+    <!-- Premium Navigation Header -->
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-premium">
+            <div class="container-fluid px-4">
+                <!-- Premium Brand -->
+                <a class="navbar-brand-premium" href="/">
+                    <div class="d-flex align-items-center">
+                        <div class="brand-icon me-2 p-2 rounded-3 bg-premium-gradient text-white">
+                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="brand-text fw-bold">FinanzPro</div>
+                            <div class="brand-subtitle text-xs text-premium-muted">BWA Analytics</div>
+                        </div>
+                    </div>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
+                
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="bi bi-list fs-4 text-premium-secondary"></i>
                 </button>
+                
+                <!-- Navigation Links -->
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center gap-2">
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Upload</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Transactions">Transactions</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/PositionTrends">
-                                <i class="bi bi-graph-up-arrow"></i> Position Trends
+                            <a class="nav-link-premium @(Context.Request.Path == "/" ? "active" : "")" href="/">
+                                <i class="bi bi-cloud-upload me-1"></i>
+                                <span>Dashboard</span>
                             </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-premium @(Context.Request.Path.StartsWithSegments("/Transactions") ? "active" : "")" href="/Transactions">
+                                <i class="bi bi-list-ul me-1"></i>
+                                <span>Transaktionen</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-premium @(Context.Request.Path.StartsWithSegments("/PositionTrends") ? "active" : "")" href="/PositionTrends">
+                                <i class="bi bi-graph-up-arrow me-1"></i>
+                                <span>BWA Trends</span>
+                            </a>
+                        </li>
+                        <!-- Settings Dropdown (Future Enhancement) -->
+                        <li class="nav-item dropdown ms-3">
+                            <button class="btn btn-premium-outline btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-gear"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-premium-lg border-0 mt-2">
+                                <li><h6 class="dropdown-header text-xs">Einstellungen</h6></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Design</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-translate me-2"></i>Sprache</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-question-circle me-2"></i>Hilfe</a></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
+        
+        <!-- Premium Progress Bar (for loading states) -->
+        <div id="global-progress" class="position-absolute bottom-0 start-0 end-0" style="height: 2px; display: none;">
+            <div class="progress-bar bg-premium-gradient" style="width: 0%; height: 100%; transition: width 0.3s ease;"></div>
+        </div>
     </header>
     
-    <main role="main" class="pb-3">
-        @RenderBody()
+    <!-- Premium Main Content Area -->
+    <main role="main" class="main-content">
+        <div class="content-wrapper p-premium-md">
+            @RenderBody()
+        </div>
     </main>
     
-    <footer class="border-top footer text-muted mt-5">
-        <div class="container text-center py-3">
-            &copy; 2024 - Finance Import App
+    <!-- Premium Footer -->
+    <footer class="premium-footer mt-5">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center text-premium-muted">
+                        <i class="bi bi-shield-check me-2"></i>
+                        <small>&copy; 2024 FinanzPro BWA Analytics - Professional German Financial Analysis</small>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <div class="footer-links d-flex justify-content-md-end justify-content-center gap-4">
+                        <a href="#" class="text-decoration-none text-premium-muted hover-text-primary">
+                            <small><i class="bi bi-file-text me-1"></i>Datenschutz</small>
+                        </a>
+                        <a href="#" class="text-decoration-none text-premium-muted hover-text-primary">
+                            <small><i class="bi bi-info-circle me-1"></i>Impressum</small>
+                        </a>
+                        <a href="#" class="text-decoration-none text-premium-muted hover-text-primary">
+                            <small><i class="bi bi-headset me-1"></i>Support</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
     
+    <!-- Premium Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Premium UI Enhancement Script -->
+    <script>
+        /**
+         * Premium UI Enhancement Script
+         * Adds sophisticated micro-interactions and loading states
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced loading states
+            function showGlobalProgress() {
+                const progressBar = document.getElementById('global-progress');
+                if (progressBar) {
+                    progressBar.style.display = 'block';
+                    const bar = progressBar.querySelector('.progress-bar');
+                    bar.style.width = '30%';
+                }
+            }
+            
+            function hideGlobalProgress() {
+                const progressBar = document.getElementById('global-progress');
+                if (progressBar) {
+                    const bar = progressBar.querySelector('.progress-bar');
+                    bar.style.width = '100%';
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                        bar.style.width = '0%';
+                    }, 300);
+                }
+            }
+            
+            // Add loading states to navigation
+            document.querySelectorAll('.nav-link-premium').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href && this.href !== window.location.href) {
+                        showGlobalProgress();
+                        // Hide progress after page load or timeout
+                        setTimeout(hideGlobalProgress, 2000);
+                    }
+                });
+            });
+            
+            // Enhanced hover effects for interactive elements
+            document.querySelectorAll('.card-premium, .btn-premium, .table-premium tbody tr').forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Add loading states to forms
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Wird verarbeitet...';
+                        submitBtn.disabled = true;
+                        showGlobalProgress();
+                    }
+                });
+            });
+            
+            // Enhanced tooltip initialization for premium elements
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    delay: { show: 500, hide: 100 },
+                    placement: 'top'
+                });
+            });
+            
+            // Add minimal animation delays to staggered elements - Professional appearance
+            document.querySelectorAll('.animate-in').forEach((element, index) => {
+                element.style.animationDelay = `${index * 10}ms`;
+            });
+            
+            console.log('FinanzPro BWA Analytics - Premium UI Enhancements Loaded ✨');
+        });
+        
+        // Global error handler for premium user experience
+        window.addEventListener('error', function(e) {
+            console.error('Application Error:', e.error);
+            // Could integrate with error reporting service
+        });
+        
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+            console.log(`Page loaded in ${loadTime}ms`);
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- Frontend Diagnostic Script (Development Only) -->
+    @if (Context.Request.Host.Host == "localhost")
+    {
+        <script src="~/js/diagnostic.js"></script>
+    }
+    
+    <!-- Custom CSS for layout enhancements -->
+    <style>
+        .premium-footer {
+            background: linear-gradient(135deg, var(--color-neutral-100), var(--color-neutral-50));
+            border-top: 1px solid var(--color-neutral-200);
+            backdrop-filter: blur(10px);
+        }
+        
+        .hover-text-primary:hover {
+            color: var(--color-primary) !important;
+            transition: color var(--timing-normal) var(--easing-ease-out);
+        }
+        
+        .main-content {
+            min-height: calc(100vh - 200px);
+            background: linear-gradient(135deg, var(--color-neutral-50) 0%, rgba(248, 250, 252, 0.8) 100%);
+            position: relative;
+        }
+        
+        .main-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(26, 54, 93, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(116, 66, 16, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .brand-subtitle {
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Mobile optimizations */
+        @@media (max-width: 768px) {
+            .navbar-brand-premium .brand-subtitle {
+                display: none;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem !important;
+            }
+        }
+    </style>
 </body>
 </html>
