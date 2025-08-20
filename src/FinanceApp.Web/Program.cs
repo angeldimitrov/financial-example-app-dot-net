@@ -49,6 +49,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<PdfParserService>();
 builder.Services.AddScoped<DataImportService>();
 builder.Services.AddScoped<ITrendAnalysisService, TrendAnalysisService>();
+builder.Services.AddScoped<CsvExportService>();
 
 // Register security services
 builder.Services.AddScoped<IFileValidationService, FileValidationService>();
