@@ -10,6 +10,7 @@ public class IndexModel : PageModel
     private readonly DataImportService _dataImport;
     private readonly IFileValidationService _fileValidation;
     private readonly IInputSanitizationService _inputSanitization;
+    private readonly ICsvExportService _csvExportService;
     private readonly ILogger<IndexModel> _logger;
     
     public List<MonthSummary>? MonthlySummaries { get; set; }
@@ -24,12 +25,14 @@ public class IndexModel : PageModel
         DataImportService dataImport,
         IFileValidationService fileValidation,
         IInputSanitizationService inputSanitization,
+        ICsvExportService csvExportService,
         ILogger<IndexModel> logger)
     {
         _pdfParser = pdfParser;
         _dataImport = dataImport;
         _fileValidation = fileValidation;
         _inputSanitization = inputSanitization;
+        _csvExportService = csvExportService;
         _logger = logger;
     }
     
@@ -100,5 +103,35 @@ public class IndexModel : PageModel
         
         // Reload the page with updated data
         return RedirectToPage();
+    }
+    
+    /// <summary>
+    /// Handler method for CSV export requests
+    /// Returns all transaction data in German-formatted CSV with BWA compliance
+    /// </summary>
+    public async Task<IActionResult> OnGetExportCsvAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Starting CSV export request");
+            
+            // Generate CSV data using the German formatting service
+            var csvData = await _csvExportService.ExportAllTransactionsToCsvAsync();
+            
+            // Generate filename with timestamp
+            var fileName = _csvExportService.GenerateExportFilename();
+            
+            _logger.LogInformation("CSV export completed successfully: {FileName}, Size: {Size} bytes", 
+                fileName, csvData.Length);
+            
+            // Return file with proper German CSV content type and UTF-8 encoding
+            return File(csvData, "text/csv; charset=utf-8", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during CSV export");
+            TempData["Error"] = "Fehler beim Exportieren der CSV-Datei. Bitte versuchen Sie es erneut.";
+            return RedirectToPage();
+        }
     }
 }

@@ -206,10 +206,14 @@
                             </div>
                             <div class="chart-actions">
                                 <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-premium-outline" id="csvExport" title="CSV Export">
+                                        <i class="bi bi-filetype-csv me-1"></i>
+                                        <span class="d-none d-md-inline">CSV</span>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-premium-outline" id="chartFullscreen" title="Vollbild">
                                         <i class="bi bi-arrows-fullscreen"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-premium-outline" id="chartExport" title="Export">
+                                    <button type="button" class="btn btn-sm btn-premium-outline" id="chartExport" title="Chart Export">
                                         <i class="bi bi-download"></i>
                                     </button>
                                 </div>
@@ -450,6 +454,8 @@
 @section Scripts {
     <!-- Load Chart Memory Manager first -->
     <script src="~/js/ChartMemoryManager.js"></script>
+    <!-- Load CSV Export functionality -->
+    <script src="~/js/csv-export.js"></script>
     
     @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
     {
