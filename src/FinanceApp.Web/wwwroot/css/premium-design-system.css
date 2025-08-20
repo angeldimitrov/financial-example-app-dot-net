@@ -765,10 +765,9 @@ body {
   border-top: 1px solid var(--color-neutral-200);
 }
 
-/* Transaction List Items */
+/* Transaction List Items - Allow natural expansion without scrollbars */
 .transaction-list {
-  max-height: 300px;
-  overflow-y: auto;
+  /* Removed max-height and overflow to allow panels to expand naturally */
 }
 
 .transaction-item {
@@ -917,7 +916,7 @@ body {
   }
   
   .transaction-list {
-    max-height: 200px;
+    /* Removed max-height to allow natural expansion on mobile */
   }
   
   .summary-card {
