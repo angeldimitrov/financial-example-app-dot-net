@@ -263,17 +263,17 @@
                                 
                                 <!-- Premium Chart Section -->
                                 <div class="col-lg-3 mb-3">
-                                    <div class="card-premium border-0 h-100">
+                                    <div class="card-premium border-0 h-100 d-flex flex-column">
                                         <div class="premium-section-header bg-info-subtle text-info p-3 rounded-top-3">
                                             <h6 class="heading-6 mb-0 d-flex align-items-center">
                                                 <i class="bi bi-pie-chart me-2"></i>
                                                 Kosten-Verteilung
                                             </h6>
                                         </div>
-                                        <div class="card-body p-3 d-flex align-items-center justify-content-center">
+                                        <div class="card-body p-3 d-flex align-items-center justify-content-center flex-fill">
                                             @if (group.ExpenseBreakdown.Any())
                                             {
-                                                <div class="chart-container-small w-100" style="position: relative; height: 200px;">
+                                                <div class="chart-container-small w-100 h-100" style="position: relative; min-height: 300px;">
                                                     <canvas id="expenseChart_@(group.Year)_@(group.Month)"></canvas>
                                                 </div>
                                             }
