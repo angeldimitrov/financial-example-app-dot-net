@@ -8,15 +8,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();
 
-// Configure connection string with environment variable fallback for production
+// Configure connection string with validation for ALL environments
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString) && builder.Environment.IsProduction())
+
+if (builder.Environment.IsProduction())
 {
-    // In production, prefer environment variable for security
-    connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
     if (string.IsNullOrEmpty(connectionString))
     {
-        throw new InvalidOperationException("Database connection string not configured. Set DATABASE_CONNECTION_STRING environment variable.");
+        connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+    }
+    
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException(
+            "SECURITY ERROR: Database connection string not configured for production environment. " +
+            "Set DATABASE_CONNECTION_STRING environment variable or configure DefaultConnection in appsettings.json.");
+    }
+}
+else
+{
+    // SECURITY FIX: Validate connection string in ALL environments
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+        
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException(
+                $"SECURITY ERROR: Database connection string not configured for {builder.Environment.EnvironmentName} environment. " +
+                "Configure DefaultConnection in appsettings.json or set DATABASE_CONNECTION_STRING environment variable.");
+        }
     }
 }
 
@@ -79,7 +100,7 @@ app.Use(async (context, next) =>
     // Allows Chart.js, Bootstrap Icons, Google Fonts, and other required resources
     context.Response.Headers.Add("Content-Security-Policy", 
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net; " +
+        "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; " +
         "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com; " +
         "font-src 'self' data: fonts.googleapis.com fonts.gstatic.com cdn.jsdelivr.net; " +
         "img-src 'self' data: blob:; " +
