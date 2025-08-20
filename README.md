@@ -1,5 +1,7 @@
 # German Financial PDF Analysis Application
 
+[![Unit Tests](https://github.com/angeldimitrov/financial-example-app-dot-net/workflows/Unit%20Tests/badge.svg)](https://github.com/angeldimitrov/financial-example-app-dot-net/actions)
+
 A .NET 9 web application for importing and analyzing German financial PDF reports (Jahresübersicht). The application parses BWA (Betriebswirtschaftliche Auswertung) format PDFs, extracts financial data, and provides interactive analytics with charts and detailed transaction views.
 
 ## Features
