@@ -67,29 +67,88 @@ class ChartUtils {
     /**
      * Professional color palette for financial data visualization
      * Colors selected for accessibility and professional appearance
+     * Supports both light and dark themes with appropriate contrast ratios
      */
     static colorPalette = {
-        // Primary colors for main categories
-        revenue: '#28a745',      // Green for revenue
-        expense: '#dc3545',      // Red for expenses  
-        profit: '#17a2b8',       // Blue for profit
-        loss: '#ffc107',         // Yellow for loss
+        // Light theme colors
+        light: {
+            // Primary colors for main categories
+            revenue: '#28a745',      // Green for revenue
+            expense: '#dc3545',      // Red for expenses  
+            profit: '#17a2b8',       // Blue for profit
+            loss: '#ffc107',         // Yellow for loss
+            
+            // BWA-specific position colors
+            personnel: '#6f42c1',    // Purple for personnel costs
+            facilities: '#fd7e14',   // Orange for facility costs
+            depreciation: '#20c997', // Teal for depreciation
+            taxes: '#e83e8c',        // Pink for taxes
+            interest: '#6c757d',     // Gray for interest
+            
+            // Extended palette for multiple positions
+            extended: [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+                '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5',
+                '#c49c94', '#f7b6d3', '#c7c7c7', '#dbdb8d', '#9edae5'
+            ],
+            
+            // Chart background and text colors
+            chartBackground: '#ffffff',
+            gridColor: 'rgba(0, 0, 0, 0.1)',
+            textColor: '#333333',
+            axisColor: '#666666'
+        },
         
-        // BWA-specific position colors
-        personnel: '#6f42c1',    // Purple for personnel costs
-        facilities: '#fd7e14',   // Orange for facility costs
-        depreciation: '#20c997', // Teal for depreciation
-        taxes: '#e83e8c',        // Pink for taxes
-        interest: '#6c757d',     // Gray for interest
-        
-        // Extended palette for multiple positions
-        extended: [
-            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
-            '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5',
-            '#c49c94', '#f7b6d3', '#c7c7c7', '#dbdb8d', '#9edae5'
-        ]
+        // Dark theme colors - enhanced brightness for dark backgrounds
+        dark: {
+            // Primary colors for main categories (brighter for dark mode)
+            revenue: '#4ade80',      // Bright green for revenue
+            expense: '#f87171',      // Bright red for expenses
+            profit: '#60a5fa',       // Bright blue for profit
+            loss: '#facc15',         // Bright yellow for loss
+            
+            // BWA-specific position colors (enhanced for dark mode)
+            personnel: '#a78bfa',    // Bright purple for personnel costs
+            facilities: '#fb923c',   // Bright orange for facility costs
+            depreciation: '#34d399', // Bright teal for depreciation
+            taxes: '#f472b6',       // Bright pink for taxes
+            interest: '#94a3b8',     // Light gray for interest
+            
+            // Extended palette for multiple positions (dark mode optimized)
+            extended: [
+                '#60a5fa', '#fb923c', '#4ade80', '#f87171', '#a78bfa',
+                '#f59e0b', '#ec4899', '#94a3b8', '#eab308', '#06b6d4',
+                '#93c5fd', '#fdba74', '#86efac', '#fca5a5', '#c4b5fd',
+                '#fbbf24', '#f9a8d4', '#d1d5db', '#fde047', '#67e8f9'
+            ],
+            
+            // Chart background and text colors
+            chartBackground: '#1a1a1a',
+            gridColor: 'rgba(255, 255, 255, 0.1)',
+            textColor: '#e8e8e8',
+            axisColor: '#b3b3b3'
+        }
     };
+    
+    /**
+     * Legacy color palette for backward compatibility
+     * Uses light theme colors by default
+     */
+    static get colorPaletteCompat() {
+        return {
+            revenue: this.colorPalette.light.revenue,
+            expense: this.colorPalette.light.expense,
+            profit: this.colorPalette.light.profit,
+            loss: this.colorPalette.light.loss,
+            personnel: this.colorPalette.light.personnel,
+            facilities: this.colorPalette.light.facilities,
+            depreciation: this.colorPalette.light.depreciation,
+            taxes: this.colorPalette.light.taxes,
+            interest: this.colorPalette.light.interest,
+            extended: this.colorPalette.light.extended
+        };
+    }
 
     /**
      * Format currency value with German locale
@@ -171,33 +230,73 @@ class ChartUtils {
     }
 
     /**
-     * Get color for BWA position based on category
+     * Get current theme from ThemeService or DOM
+     * 
+     * @returns {string} 'light' or 'dark'
+     */
+    static getCurrentTheme() {
+        // Try to get theme from ThemeService
+        if (window.themeService && window.themeService.getEffectiveTheme) {
+            return window.themeService.getEffectiveTheme();
+        }
+        
+        // Fallback to DOM attribute
+        const htmlElement = document.documentElement;
+        const dataTheme = htmlElement.getAttribute('data-theme');
+        
+        if (dataTheme === 'dark') return 'dark';
+        if (dataTheme === 'light') return 'light';
+        
+        // Check system preference as last resort
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        
+        return 'light'; // Default fallback
+    }
+    
+    /**
+     * Get theme-appropriate color palette
+     * 
+     * @param {string} [theme] - Override theme ('light' or 'dark')
+     * @returns {Object} Theme-appropriate color palette
+     */
+    static getThemePalette(theme = null) {
+        const currentTheme = theme || this.getCurrentTheme();
+        return this.colorPalette[currentTheme] || this.colorPalette.light;
+    }
+
+    /**
+     * Get color for BWA position based on category with theme support
      * 
      * @param {string} positionName - BWA position name
      * @param {number} [index=0] - Fallback color index
+     * @param {string} [theme=null] - Override theme ('light' or 'dark')
      * @returns {string} Hex color code
      */
-    static getBwaPositionColor(positionName, index = 0) {
+    static getBwaPositionColor(positionName, index = 0, theme = null) {
+        const palette = this.getThemePalette(theme);
+        
         if (!positionName) {
-            return this.colorPalette.extended[index % this.colorPalette.extended.length];
+            return palette.extended[index % palette.extended.length];
         }
 
         const name = positionName.toLowerCase();
         
         // Specific color mapping for common BWA positions
         const colorMap = {
-            'umsatz': this.colorPalette.revenue,
-            'erlös': this.colorPalette.revenue,
-            'personal': this.colorPalette.personnel,
-            'lohn': this.colorPalette.personnel,
-            'gehalt': this.colorPalette.personnel,
-            'raum': this.colorPalette.facilities,
-            'miete': this.colorPalette.facilities,
-            'abschreibung': this.colorPalette.depreciation,
-            'steuer': this.colorPalette.taxes,
-            'zins': this.colorPalette.interest,
-            'gewinn': this.colorPalette.profit,
-            'verlust': this.colorPalette.loss
+            'umsatz': palette.revenue,
+            'erlös': palette.revenue,
+            'personal': palette.personnel,
+            'lohn': palette.personnel,
+            'gehalt': palette.personnel,
+            'raum': palette.facilities,
+            'miete': palette.facilities,
+            'abschreibung': palette.depreciation,
+            'steuer': palette.taxes,
+            'zins': palette.interest,
+            'gewinn': palette.profit,
+            'verlust': palette.loss
         };
 
         // Find matching color
@@ -208,7 +307,194 @@ class ChartUtils {
         }
 
         // Fallback to extended palette
-        return this.colorPalette.extended[index % this.colorPalette.extended.length];
+        return palette.extended[index % palette.extended.length];
+    }
+    
+    /**
+     * Get Chart.js configuration for current theme with premium animations
+     * 
+     * @param {Object} options - Configuration options
+     * @param {string} [options.theme=null] - Override theme
+     * @param {boolean} [options.responsive=true] - Responsive chart
+     * @param {boolean} [options.maintainAspectRatio=false] - Maintain aspect ratio
+     * @param {boolean} [options.premiumAnimations=true] - Enable premium animations
+     * @returns {Object} Chart.js configuration object
+     */
+    static getThemeChartConfig(options = {}) {
+        const {
+            theme = null,
+            responsive = true,
+            maintainAspectRatio = false,
+            premiumAnimations = true
+        } = options;
+        
+        const palette = this.getThemePalette(theme);
+        
+        return {
+            responsive,
+            maintainAspectRatio,
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            animation: premiumAnimations ? {
+                duration: 750,
+                easing: 'easeInOutQuart',
+                delay: (context) => {
+                    // Stagger animation for multiple datasets
+                    const delay = context.dataIndex * 30 + context.datasetIndex * 100;
+                    return delay;
+                },
+                onComplete: (animation) => {
+                    // Trigger custom event when animation completes
+                    if (animation.chart && animation.chart.canvas) {
+                        const event = new CustomEvent('chart-animation-complete', {
+                            detail: { chart: animation.chart }
+                        });
+                        animation.chart.canvas.dispatchEvent(event);
+                    }
+                }
+            } : {
+                duration: 400,
+                easing: 'easeOutQuart'
+            },
+            transitions: {
+                active: {
+                    animation: {
+                        duration: 200
+                    }
+                },
+                resize: {
+                    animation: {
+                        duration: 400
+                    }
+                },
+                show: {
+                    animations: {
+                        x: { from: 0 },
+                        y: { from: 0 }
+                    }
+                },
+                hide: {
+                    animations: {
+                        x: { to: 0 },
+                        y: { to: 0 }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'center',
+                    labels: {
+                        color: palette.textColor,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 12,
+                            weight: 500
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 20,
+                        generateLabels: (chart) => {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((dataset, i) => ({
+                                text: dataset.label,
+                                fillStyle: dataset.backgroundColor,
+                                strokeStyle: dataset.borderColor,
+                                lineWidth: 2,
+                                hidden: !chart.isDatasetVisible(i),
+                                index: i,
+                                pointStyle: dataset.pointStyle || 'circle'
+                            }));
+                        }
+                    },
+                    onHover: (event, legendItem, legend) => {
+                        if (legendItem) {
+                            legend.chart.canvas.style.cursor = 'pointer';
+                            // Highlight corresponding dataset
+                            const ci = legend.chart;
+                            ci.data.datasets.forEach((dataset, i) => {
+                                dataset.borderWidth = i === legendItem.index ? 4 : 2;
+                                dataset.pointRadius = i === legendItem.index ? 5 : 4;
+                            });
+                            ci.update('none');
+                        }
+                    },
+                    onLeave: (event, legendItem, legend) => {
+                        legend.chart.canvas.style.cursor = 'default';
+                        // Reset dataset styles
+                        const ci = legend.chart;
+                        ci.data.datasets.forEach((dataset) => {
+                            dataset.borderWidth = 2;
+                            dataset.pointRadius = 4;
+                        });
+                        ci.update('none');
+                    }
+                },
+                tooltip: this.getPremiumTooltipConfig({ theme, premiumAnimations })
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: palette.axisColor,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 11,
+                            weight: 400
+                        },
+                        maxRotation: 45,
+                        minRotation: 0
+                    },
+                    grid: {
+                        color: palette.gridColor,
+                        drawBorder: false,
+                        lineWidth: 0.5
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: palette.axisColor,
+                        font: {
+                            family: 'JetBrains Mono, monospace',
+                            size: 11,
+                            weight: 400
+                        },
+                        callback: (value) => this.formatCurrency(value, { compact: true }),
+                        padding: 8
+                    },
+                    grid: {
+                        color: palette.gridColor,
+                        drawBorder: false,
+                        lineWidth: 0.5
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 7,
+                    borderWidth: 2,
+                    hitRadius: 10,
+                    hoverBorderWidth: 3
+                },
+                line: {
+                    borderWidth: 2,
+                    tension: 0.15,
+                    borderJoinStyle: 'round'
+                },
+                bar: {
+                    borderRadius: 4,
+                    borderSkipped: false
+                }
+            },
+            onHover: (event, activeElements, chart) => {
+                chart.canvas.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+            }
+        };
     }
 
     /**
@@ -269,32 +555,73 @@ class ChartUtils {
     }
 
     /**
-     * Generate Chart.js tooltip configuration for German locale
+     * Generate premium Chart.js tooltip configuration with animations
      * 
      * @param {Object} options - Tooltip configuration options
      * @param {boolean} [options.showTrend=true] - Show trend information
      * @param {boolean} [options.showPercentage=false] - Show percentage values
+     * @param {string} [options.theme=null] - Override theme
+     * @param {boolean} [options.premiumAnimations=true] - Enable premium animations
      * @returns {Object} Chart.js tooltip configuration
      */
-    static getGermanTooltipConfig(options = {}) {
-        const { showTrend = true, showPercentage = false } = options;
+    static getPremiumTooltipConfig(options = {}) {
+        const { 
+            showTrend = true, 
+            showPercentage = false, 
+            theme = null,
+            premiumAnimations = true
+        } = options;
+        const palette = this.getThemePalette(theme);
         
         return {
-            backgroundColor: 'rgba(33, 37, 41, 0.95)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: '#495057',
+            enabled: true,
+            backgroundColor: theme === 'dark' ? 
+                'rgba(26, 26, 26, 0.95)' : 
+                'rgba(255, 255, 255, 0.98)',
+            titleColor: theme === 'dark' ? '#e8e8e8' : '#1e293b',
+            titleFont: {
+                family: 'Inter, sans-serif',
+                size: 13,
+                weight: 600
+            },
+            bodyColor: theme === 'dark' ? '#d1d1d1' : '#475569',
+            bodyFont: {
+                family: 'JetBrains Mono, monospace',
+                size: 12,
+                weight: 400
+            },
+            footerColor: theme === 'dark' ? '#b3b3b3' : '#64748b',
+            footerFont: {
+                family: 'Inter, sans-serif',
+                size: 11,
+                weight: 500
+            },
+            borderColor: theme === 'dark' ? 
+                'rgba(96, 165, 250, 0.3)' : 
+                'rgba(26, 54, 93, 0.2)',
             borderWidth: 1,
-            cornerRadius: 6,
+            cornerRadius: 8,
+            padding: 12,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
             displayColors: true,
+            usePointStyle: true,
+            caretSize: 6,
+            caretPadding: 8,
+            animation: premiumAnimations ? {
+                duration: 250,
+                easing: 'easeOutCubic'
+            } : {
+                duration: 100,
+                easing: 'linear'
+            },
             callbacks: {
                 title: (context) => {
                     if (context.length === 0) return '';
                     
-                    // Format date title
+                    // Format date title with icon
                     const label = context[0].label;
                     if (label && (label.includes('-') || label.includes('/'))) {
-                        return this.formatBwaDate(label);
+                        return `📅 ${this.formatBwaDate(label)}`;
                     }
                     return label;
                 },
@@ -304,6 +631,9 @@ class ChartUtils {
                     
                     let formattedValue = this.formatCurrency(value);
                     
+                    // Add icon based on value
+                    const icon = value >= 0 ? '📈' : '📉';
+                    
                     if (showPercentage && context.dataset._percentageValues) {
                         const percentage = context.dataset._percentageValues[context.dataIndex];
                         if (percentage !== undefined) {
@@ -311,10 +641,10 @@ class ChartUtils {
                         }
                     }
                     
-                    return `${datasetLabel}: ${formattedValue}`;
+                    return `${icon} ${datasetLabel}: ${formattedValue}`;
                 },
                 footer: showTrend ? (tooltipItems) => {
-                    // Show trend information in footer
+                    // Show trend information in footer with enhanced formatting
                     const current = tooltipItems[0];
                     if (current.dataIndex > 0) {
                         const dataset = current.dataset;
@@ -326,16 +656,45 @@ class ChartUtils {
                             const changePercent = previousValue !== 0 ? 
                                 (change / Math.abs(previousValue)) : 0;
                             
-                            const trend = change >= 0 ? '↗' : '↘';
-                            const trendClass = change >= 0 ? 'up' : 'down';
+                            const trend = change >= 0 ? '↗️' : '↘️';
+                            const trendText = change >= 0 ? 'Anstieg' : 'Rückgang';
                             
-                            return `${trend} ${this.formatCurrency(change)} (${this.formatPercentage(changePercent)})`;
+                            return [
+                                '',
+                                `${trend} ${trendText}: ${this.formatCurrency(Math.abs(change))}`,
+                                `Änderung: ${this.formatPercentage(changePercent)}`
+                            ];
                         }
                     }
                     return '';
-                } : undefined
+                } : undefined,
+                beforeBody: (tooltipItems) => {
+                    if (premiumAnimations && tooltipItems.length > 0) {
+                        return '─'.repeat(25);
+                    }
+                    return '';
+                },
+                afterBody: (tooltipItems) => {
+                    if (premiumAnimations && tooltipItems.length > 1) {
+                        // Calculate total for multiple datasets
+                        const total = tooltipItems.reduce((sum, item) => sum + item.parsed.y, 0);
+                        return [
+                            '─'.repeat(25),
+                            `Gesamt: ${this.formatCurrency(total)}`
+                        ];
+                    }
+                    return '';
+                }
             }
         };
+    }
+    
+    /**
+     * Generate Chart.js tooltip configuration for German locale with theme support
+     * Legacy method for backward compatibility
+     */
+    static getGermanTooltipConfig(options = {}) {
+        return this.getPremiumTooltipConfig(options);
     }
 
     /**
@@ -543,6 +902,120 @@ class ChartUtils {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
+    }
+
+    /**
+     * Update existing Chart.js instance with new theme
+     * 
+     * @param {Chart} chartInstance - Chart.js instance
+     * @param {string} theme - Theme to apply ('light' or 'dark')
+     */
+    static updateChartTheme(chartInstance, theme = null) {
+        if (!chartInstance || !chartInstance.config) {
+            console.warn('ChartUtils.updateChartTheme: Invalid chart instance');
+            return;
+        }
+        
+        const palette = this.getThemePalette(theme);
+        const config = chartInstance.config;
+        
+        // Update legend colors
+        if (config.options.plugins && config.options.plugins.legend) {
+            config.options.plugins.legend.labels.color = palette.textColor;
+        }
+        
+        // Update tooltip colors
+        if (config.options.plugins && config.options.plugins.tooltip) {
+            const tooltip = config.options.plugins.tooltip;
+            tooltip.backgroundColor = theme === 'dark' ? 'rgba(26, 26, 26, 0.95)' : 'rgba(33, 37, 41, 0.95)';
+            tooltip.borderColor = theme === 'dark' ? 'rgba(64, 64, 64, 0.8)' : '#495057';
+        }
+        
+        // Update scale colors
+        if (config.options.scales) {
+            Object.keys(config.options.scales).forEach(scaleKey => {
+                const scale = config.options.scales[scaleKey];
+                if (scale.ticks) {
+                    scale.ticks.color = palette.axisColor;
+                }
+                if (scale.grid) {
+                    scale.grid.color = palette.gridColor;
+                }
+            });
+        }
+        
+        // Update dataset colors to match theme
+        config.data.datasets.forEach((dataset, datasetIndex) => {
+            if (dataset._originalColors) {
+                // Restore from saved original colors and update for theme
+                const originalBorderColor = dataset._originalColors.borderColor;
+                const originalBackgroundColor = dataset._originalColors.backgroundColor;
+                
+                if (Array.isArray(originalBorderColor)) {
+                    dataset.borderColor = originalBorderColor.map((color, index) => 
+                        this.getBwaPositionColor(dataset._positionNames?.[index] || '', index, theme)
+                    );
+                } else {
+                    dataset.borderColor = this.getBwaPositionColor(dataset._positionName || '', datasetIndex, theme);
+                }
+                
+                if (Array.isArray(originalBackgroundColor)) {
+                    dataset.backgroundColor = originalBackgroundColor.map((color, index) => {
+                        const newColor = this.getBwaPositionColor(dataset._positionNames?.[index] || '', index, theme);
+                        return this.hexToRgba(newColor, 0.2);
+                    });
+                } else {
+                    const newColor = this.getBwaPositionColor(dataset._positionName || '', datasetIndex, theme);
+                    dataset.backgroundColor = this.hexToRgba(newColor, 0.2);
+                }
+            }
+        });
+        
+        // Trigger chart update
+        chartInstance.update('none'); // Use 'none' for immediate update without animation
+        
+        console.log(`[ChartUtils] Updated chart theme to: ${theme || this.getCurrentTheme()}`);
+    }
+    
+    /**
+     * Register theme change listener for automatic chart updates
+     * 
+     * @param {Chart} chartInstance - Chart.js instance to keep updated
+     */
+    static registerThemeListener(chartInstance) {
+        if (!chartInstance || !document) {
+            return;
+        }
+        
+        const updateHandler = (event) => {
+            const newTheme = event.detail?.effectiveTheme || event.detail?.theme;
+            if (newTheme) {
+                this.updateChartTheme(chartInstance, newTheme);
+            }
+        };
+        
+        // Listen for theme change events
+        document.addEventListener('theme-changed', updateHandler);
+        
+        // Store reference for cleanup
+        if (!chartInstance._themeListener) {
+            chartInstance._themeListener = updateHandler;
+        }
+        
+        console.log('[ChartUtils] Registered theme change listener for chart');
+    }
+    
+    /**
+     * Unregister theme change listener
+     * 
+     * @param {Chart} chartInstance - Chart.js instance
+     */
+    static unregisterThemeListener(chartInstance) {
+        if (chartInstance && chartInstance._themeListener && document) {
+            document.removeEventListener('theme-changed', chartInstance._themeListener);
+            delete chartInstance._themeListener;
+            console.log('[ChartUtils] Unregistered theme change listener for chart');
+        }
     }
 
     /**

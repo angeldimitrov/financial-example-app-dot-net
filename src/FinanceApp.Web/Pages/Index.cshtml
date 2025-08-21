@@ -312,12 +312,16 @@
         </div>
     </div>
     
-    <!-- Premium Summary Table Section -->
-    @if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
-    {
-        <div class="row mt-5">
+    
+</div> <!-- Close the container-fluid before the table section -->
+
+<!-- Premium Summary Table Section - Full Width -->
+@if (Model.MonthlySummaries != null && Model.MonthlySummaries.Any())
+{
+    <div class="container-fluid mt-5 px-4">
+        <div class="row">
             <div class="col-12">
-                <div class="card-premium animate-in">
+                <div class="card-premium animate-in shadow-lg">
                     <div class="card-header border-0 bg-transparent p-4 pb-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -447,8 +451,8 @@
                 </div>
             </div>
         </div>
-    }
-</div>
+    </div> <!-- Close the container-fluid for the table section -->
+}
 
 @section Scripts {
     <!-- Load Chart Memory Manager first -->
