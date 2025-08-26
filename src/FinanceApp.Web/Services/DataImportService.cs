@@ -318,7 +318,7 @@ public class DataImportService
     /// @param type - Optional transaction type filter
     /// @returns Optimized transaction data for display
     /// </summary>
-    public async Task<List<TransactionLine>> GetTransactionsAsync(int? year = null, int? month = null, TransactionType? type = null)
+    public virtual async Task<List<TransactionLine>> GetTransactionsAsync(int? year = null, int? month = null, TransactionType? type = null)
     {
         try
         {

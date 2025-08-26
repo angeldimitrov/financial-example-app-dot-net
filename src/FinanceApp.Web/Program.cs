@@ -8,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();
 
+// Add anti-forgery services
+builder.Services.AddAntiforgery();
+
 // Configure connection string with validation for ALL environments
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -49,6 +52,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<PdfParserService>();
 builder.Services.AddScoped<DataImportService>();
 builder.Services.AddScoped<ITrendAnalysisService, TrendAnalysisService>();
+builder.Services.AddScoped<CsvExportService>();
 
 // Register security services
 builder.Services.AddScoped<IFileValidationService, FileValidationService>();

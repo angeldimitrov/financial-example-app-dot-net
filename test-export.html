@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV Export Test</title>
+</head>
+<body>
+    <h1>CSV Export Test</h1>
+    <p>Go to <a href="http://localhost:5001" target="_blank">http://localhost:5001</a> and:</p>
+    <ol>
+        <li>Look for existing data in the monthly summary table</li>
+        <li>Click "Daten exportieren" button to open the export modal</li>
+        <li>Select date range and options</li>
+        <li>Click "Export starten" to test the CSV export</li>
+        <li>Verify that a CSV file downloads with the correct data</li>
+    </ol>
+    
+    <h2>Expected Behavior:</h2>
+    <ul>
+        <li>Modal should open with date range pre-filled</li>
+        <li>Estimated records should update when changing options</li>
+        <li>Export should download a CSV file</li>
+        <li>Progress animation should show during export</li>
+    </ul>
+    
+    <h2>Test in Browser Console:</h2>
+    <pre>
+// Test estimated records API call
+const token = document.querySelector('#csvExportForm input[name="__RequestVerificationToken"]').value;
+const exportOptions = {
+    startDate: "2024-01-01",
+    endDate: "2024-12-31", 
+    includeRevenue: true,
+    includeExpenses: true,
+    exportFormat: "standard"
+};
+
+fetch('/Index?handler=GetEstimatedRecordCount', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'RequestVerificationToken': token
+    },
+    body: JSON.stringify(exportOptions)
+})
+.then(r => r.json())
+.then(d => console.log('Estimated records:', d));
+
+// Test actual export
+fetch('/Index?handler=ExportCsvWithOptions', {
+    method: 'POST', 
+    headers: {
+        'Content-Type': 'application/json',
+        'RequestVerificationToken': token
+    },
+    body: JSON.stringify(exportOptions)
+})
+.then(response => {
+    if (response.ok) {
+        return response.blob();
+    }
+    throw new Error('Export failed');
+})
+.then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'test-export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    console.log('CSV downloaded successfully');
+});
+    </pre>
+</body>
+</html>

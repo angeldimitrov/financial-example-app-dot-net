@@ -1,0 +1,16 @@
+{
+  "name": "finance-app-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for CSV export feature",
+  "main": "test_csv_export_e2e.js",
+  "scripts": {
+    "test:e2e": "node test_csv_export_e2e.js",
+    "test:e2e:headless": "HEADLESS=true node test_csv_export_e2e.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {},
+  "author": "Test Automation Team",
+  "license": "MIT"
+}

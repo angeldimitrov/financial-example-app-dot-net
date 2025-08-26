@@ -439,12 +439,231 @@
                                 <i class="bi bi-graph-up-arrow me-2"></i>
                                 <span>BWA Trends analysieren</span>
                             </a>
+                            <button type="button" class="btn-premium btn-premium-secondary" data-bs-toggle="modal" data-bs-target="#csvExportModal">
+                                <i class="bi bi-download me-2"></i>
+                                <span>Daten exportieren</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     }
+</div>
+
+<!-- Premium CSV Export Modal -->
+<div class="modal fade" id="csvExportModal" tabindex="-1" aria-labelledby="csvExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-premium">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center">
+                    <div class="modal-icon me-3">
+                        <i class="bi bi-download fs-4 text-premium-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title heading-4 mb-1" id="csvExportModalLabel">BWA-Daten exportieren</h5>
+                        <p class="text-premium-muted mb-0 text-sm">Konfigurieren Sie Ihren CSV-Export nach Ihren Anforderungen</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-premium" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <form id="csvExportForm" class="needs-validation" novalidate>
+                    @Html.AntiForgeryToken()
+                    <!-- Date Range Section -->
+                    <div class="export-section mb-4">
+                        <div class="section-header mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-range text-premium-primary me-2"></i>
+                                <h6 class="heading-6 mb-0">Zeitraum auswählen</h6>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="startDate" class="form-label text-premium-secondary fw-medium">Von</label>
+                                <div class="input-group-premium">
+                                    <span class="input-group-icon">
+                                        <i class="bi bi-calendar3"></i>
+                                    </span>
+                                    <input type="date" class="form-control-premium" id="startDate" name="startDate" required>
+                                </div>
+                                <div class="invalid-feedback">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Bitte wählen Sie ein Startdatum aus.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="endDate" class="form-label text-premium-secondary fw-medium">Bis</label>
+                                <div class="input-group-premium">
+                                    <span class="input-group-icon">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </span>
+                                    <input type="date" class="form-control-premium" id="endDate" name="endDate" required>
+                                </div>
+                                <div class="invalid-feedback">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Bitte wählen Sie ein Enddatum aus.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="date-range-info mt-2">
+                            <small class="text-premium-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Verfügbare Daten: <span id="availableDateRange" class="fw-medium"></span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Transaction Type Section -->
+                    <div class="export-section mb-4">
+                        <div class="section-header mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-funnel text-premium-primary me-2"></i>
+                                <h6 class="heading-6 mb-0">Transaktionstypen</h6>
+                            </div>
+                        </div>
+                        <div class="checkbox-group-premium">
+                            <div class="form-check-premium">
+                                <input class="form-check-input" type="checkbox" value="revenue" id="includeRevenue" name="transactionTypes" checked>
+                                <label class="form-check-label" for="includeRevenue">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-arrow-up-circle text-success me-2"></i>
+                                        <span>Erlöse einbeziehen</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="form-check-premium">
+                                <input class="form-check-input" type="checkbox" value="expenses" id="includeExpenses" name="transactionTypes" checked>
+                                <label class="form-check-label" for="includeExpenses">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-arrow-down-circle text-danger me-2"></i>
+                                        <span>Kosten einbeziehen</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Export Format Section -->
+                    <div class="export-section mb-4">
+                        <div class="section-header mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-file-earmark-text text-premium-primary me-2"></i>
+                                <h6 class="heading-6 mb-0">Export-Format</h6>
+                            </div>
+                        </div>
+                        <div class="format-toggle">
+                            <div class="btn-group-premium" role="group" aria-label="Export format selection">
+                                <input type="radio" class="btn-check" name="exportFormat" id="standardCsv" value="standard" autocomplete="off" checked>
+                                <label class="btn btn-premium-toggle" for="standardCsv">
+                                    <i class="bi bi-filetype-csv me-2"></i>
+                                    Standard CSV
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="exportFormat" id="germanExcel" value="german" autocomplete="off">
+                                <label class="btn btn-premium-toggle" for="germanExcel">
+                                    <i class="bi bi-file-earmark-excel me-2"></i>
+                                    German Excel
+                                </label>
+                            </div>
+                        </div>
+                        <div class="format-description mt-2">
+                            <small class="text-premium-muted">
+                                <span id="formatDescription">Komma-getrennte Werte mit Punkt als Dezimaltrennzeichen</span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Section -->
+                    <div class="export-section">
+                        <div class="section-header mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-eye text-premium-primary me-2"></i>
+                                <h6 class="heading-6 mb-0">Vorschau</h6>
+                            </div>
+                        </div>
+                        <div class="preview-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="preview-label text-premium-muted">Geschätzte Datensätze:</div>
+                                    <div class="preview-value" id="estimatedRecords">
+                                        <span class="loading-spinner-sm me-2"></span>
+                                        Wird berechnet...
+                                    </div>
+                                </div>
+                                <div class="preview-icon">
+                                    <i class="bi bi-file-earmark-spreadsheet fs-3 text-premium-secondary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer border-0 pt-0">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="export-info">
+                        <small class="text-premium-muted">
+                            <i class="bi bi-shield-check text-success me-1"></i>
+                            Sichere Übertragung - DSGVO-konform
+                        </small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-premium btn-premium-outline me-2" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>
+                            <span>Abbrechen</span>
+                        </button>
+                        <button type="submit" form="csvExportForm" class="btn-premium btn-premium-primary" id="exportButton">
+                            <div class="btn-content">
+                                <i class="bi bi-download me-2"></i>
+                                <span>Export starten</span>
+                            </div>
+                            <div class="btn-loading d-none">
+                                <div class="loading-spinner me-2"></div>
+                                <span id="loadingText">Export wird vorbereitet...</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Overlay -->
+            <div class="export-progress-overlay d-none" id="exportProgressOverlay">
+                <div class="progress-content">
+                    <div class="progress-icon mb-3">
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                            </svg>
+                            <div class="progress-percentage" id="progressPercentage">0%</div>
+                        </div>
+                    </div>
+                    <h5 class="progress-title">Export läuft...</h5>
+                    <p class="progress-description text-premium-muted" id="progressDescription">
+                        Ihre Daten werden verarbeitet und zum Download vorbereitet.
+                    </p>
+                    <div class="progress-stats mt-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-value" id="processedRecords">0</div>
+                                <div class="stat-label">Verarbeitet</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-value" id="totalRecords">0</div>
+                                <div class="stat-label">Gesamt</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-value" id="estimatedTime">--</div>
+                                <div class="stat-label">Verbleibend</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -863,6 +1082,368 @@
             console.log('Secure Upload Interface initialized ✨');
         });
         
+    </script>
+    
+    <!-- Premium CSV Export Modal Script -->
+    <script>
+        /**
+         * Premium CSV Export Modal with Sophisticated Interactions
+         * German financial data export with enhanced UX and security
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const csvExportModal = document.getElementById('csvExportModal');
+            const exportForm = document.getElementById('csvExportForm');
+            const exportButton = document.getElementById('exportButton');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const availableDateRange = document.getElementById('availableDateRange');
+            const estimatedRecords = document.getElementById('estimatedRecords');
+            const formatDescription = document.getElementById('formatDescription');
+            const progressOverlay = document.getElementById('exportProgressOverlay');
+            
+            // Available date range from server data
+            const availableData = @Html.Raw(Json.Serialize(Model.MonthlySummaries?.Select(s => new { 
+                year = s.Year, 
+                month = s.Month, 
+                count = s.TransactionCount 
+            }).ToArray() ?? new object[0]));
+            
+            // Initialize date range
+            function initializeDateRange() {
+                if (availableData && availableData.length > 0) {
+                    const minDate = availableData.reduce((min, item) => 
+                        new Date(item.year, item.month - 1) < new Date(min.year, min.month - 1) ? item : min);
+                    const maxDate = availableData.reduce((max, item) => 
+                        new Date(item.year, item.month - 1) > new Date(max.year, max.month - 1) ? item : max);
+                    
+                    const minDateStr = `${minDate.year}-${String(minDate.month).padStart(2, '0')}-01`;
+                    const maxDateStr = `${maxDate.year}-${String(maxDate.month).padStart(2, '0')}-${new Date(maxDate.year, maxDate.month, 0).getDate()}`;
+                    
+                    startDateInput.value = minDateStr;
+                    endDateInput.value = maxDateStr;
+                    startDateInput.min = minDateStr;
+                    startDateInput.max = maxDateStr;
+                    endDateInput.min = minDateStr;
+                    endDateInput.max = maxDateStr;
+                    
+                    const minFormatted = new Date(minDate.year, minDate.month - 1).toLocaleDateString('de-DE', { year: 'numeric', month: 'long' });
+                    const maxFormatted = new Date(maxDate.year, maxDate.month - 1).toLocaleDateString('de-DE', { year: 'numeric', month: 'long' });
+                    availableDateRange.textContent = `${minFormatted} - ${maxFormatted}`;
+                    
+                    updateEstimatedRecords();
+                }
+            }
+            
+            // Update estimated records based on form inputs using real server data
+            function updateEstimatedRecords() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                const includeRevenue = document.getElementById('includeRevenue').checked;
+                const includeExpenses = document.getElementById('includeExpenses').checked;
+                
+                if (!startDate || !endDate || (!includeRevenue && !includeExpenses)) {
+                    estimatedRecords.innerHTML = '<span class="text-warning">0</span> Datensätze';
+                    return;
+                }
+                
+                // Show loading state
+                estimatedRecords.innerHTML = `
+                    <span class="loading-spinner-sm me-2"></span>
+                    Wird berechnet...
+                `;
+                
+                // Get real estimated count from server
+                const exportOptions = {
+                    startDate: startDate,
+                    endDate: endDate,
+                    includeRevenue: includeRevenue,
+                    includeExpenses: includeExpenses,
+                    exportFormat: document.querySelector('input[name="exportFormat"]:checked')?.value || 'standard'
+                };
+                
+                // Get anti-forgery token from modal form
+                const token = document.querySelector('#csvExportForm input[name="__RequestVerificationToken"]')?.value;
+                
+                fetch('/Index?handler=GetEstimatedRecordCount', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(exportOptions)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        estimatedRecords.innerHTML = `
+                            <span class="fw-bold text-premium-primary">${data.count.toLocaleString('de-DE')}</span> 
+                            <span class="text-premium-muted">Datensätze</span>
+                        `;
+                    } else {
+                        estimatedRecords.innerHTML = '<span class="text-danger">Fehler bei Berechnung</span>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting estimated records:', error);
+                    estimatedRecords.innerHTML = '<span class="text-warning">Schätzung nicht verfügbar</span>';
+                });
+            }
+            
+            // Format descriptions
+            const formatDescriptions = {
+                standard: 'Komma-getrennte Werte mit Punkt als Dezimaltrennzeichen (International)',
+                german: 'Semikolon-getrennte Werte mit Komma als Dezimaltrennzeichen (Excel Deutschland)'
+            };
+            
+            // Update format description
+            function updateFormatDescription() {
+                const selectedFormat = document.querySelector('input[name="exportFormat"]:checked')?.value || 'standard';
+                formatDescription.textContent = formatDescriptions[selectedFormat];
+            }
+            
+            // Modal show event - initialize data
+            csvExportModal.addEventListener('show.bs.modal', function() {
+                initializeDateRange();
+                updateFormatDescription();
+                
+                // Animate modal elements
+                setTimeout(() => {
+                    document.querySelectorAll('.export-section').forEach((section, index) => {
+                        section.style.animationDelay = `${index * 100}ms`;
+                        section.classList.add('animate-in-left');
+                    });
+                }, 100);
+            });
+            
+            // Form input event listeners
+            startDateInput.addEventListener('change', updateEstimatedRecords);
+            endDateInput.addEventListener('change', updateEstimatedRecords);
+            document.getElementById('includeRevenue').addEventListener('change', updateEstimatedRecords);
+            document.getElementById('includeExpenses').addEventListener('change', updateEstimatedRecords);
+            
+            // Format radio button changes
+            document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
+                radio.addEventListener('change', updateFormatDescription);
+            });
+            
+            // Form submission with progress tracking
+            exportForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!exportForm.checkValidity()) {
+                    exportForm.classList.add('was-validated');
+                    return;
+                }
+                
+                // Validate at least one transaction type is selected
+                const hasSelectedType = document.querySelector('input[name="transactionTypes"]:checked');
+                if (!hasSelectedType) {
+                    alert('Bitte wählen Sie mindestens einen Transaktionstyp aus.');
+                    return;
+                }
+                
+                // Validate date range
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                if (startDate > endDate) {
+                    alert('Das Startdatum muss vor dem Enddatum liegen.');
+                    return;
+                }
+                
+                startExport();
+            });
+            
+            // Start export process with progress animation
+            function startExport() {
+                // Hide modal content and show progress
+                document.querySelector('.modal-body').style.display = 'none';
+                document.querySelector('.modal-footer').style.display = 'none';
+                progressOverlay.classList.remove('d-none');
+                
+                // Start progress animation
+                simulateExportProgress();
+            }
+            
+            // Simulate export progress with realistic timing
+            function simulateExportProgress() {
+                const totalRecordsText = estimatedRecords.textContent.match(/\d+/)?.[0] || '100';
+                const totalRecords = parseInt(totalRecordsText.replace(/\./g, ''));
+                
+                let progress = 0;
+                let processedRecords = 0;
+                const startTime = Date.now();
+                
+                document.getElementById('totalRecords').textContent = totalRecords.toLocaleString('de-DE');
+                
+                const progressInterval = setInterval(() => {
+                    // Realistic progress curve (fast start, slower middle, fast end)
+                    const increment = progress < 20 ? 3 : progress < 80 ? 1.5 : 4;
+                    progress += increment + (Math.random() * 2);
+                    
+                    if (progress > 100) progress = 100;
+                    
+                    processedRecords = Math.floor((progress / 100) * totalRecords);
+                    
+                    // Update circular progress
+                    const circle = document.querySelector('.circle');
+                    const circumference = 2 * Math.PI * 15.9155;
+                    const dashOffset = circumference - (progress / 100) * circumference;
+                    circle.style.strokeDasharray = `${circumference}, ${circumference}`;
+                    circle.style.strokeDashoffset = dashOffset;
+                    
+                    // Update UI elements
+                    document.getElementById('progressPercentage').textContent = Math.round(progress) + '%';
+                    document.getElementById('processedRecords').textContent = processedRecords.toLocaleString('de-DE');
+                    
+                    // Update estimated time
+                    const elapsed = Date.now() - startTime;
+                    if (progress > 5) {
+                        const estimatedTotal = (elapsed / (progress / 100));
+                        const remaining = Math.max(0, estimatedTotal - elapsed);
+                        document.getElementById('estimatedTime').textContent = 
+                            remaining < 1000 ? '<1s' : Math.round(remaining / 1000) + 's';
+                    }
+                    
+                    // Progress descriptions
+                    const descriptions = [
+                        'Daten werden aus der Datenbank geladen...',
+                        'Transaktionen werden gefiltert...',
+                        'CSV-Format wird generiert...',
+                        'Deutsche Formatierung wird angewendet...',
+                        'Datei wird zum Download vorbereitet...',
+                        'Export erfolgreich abgeschlossen!'
+                    ];
+                    
+                    const descIndex = Math.min(Math.floor(progress / 20), descriptions.length - 1);
+                    document.getElementById('progressDescription').textContent = descriptions[descIndex];
+                    
+                    if (progress >= 100) {
+                        clearInterval(progressInterval);
+                        setTimeout(() => {
+                            completeExport();
+                        }, 1000);
+                    }
+                }, 200);
+            }
+            
+            // Complete export and trigger actual download
+            function completeExport() {
+                // Create export options object
+                const exportOptions = {
+                    startDate: startDateInput.value,
+                    endDate: endDateInput.value,
+                    includeRevenue: document.getElementById('includeRevenue').checked,
+                    includeExpenses: document.getElementById('includeExpenses').checked,
+                    exportFormat: document.querySelector('input[name="exportFormat"]:checked').value
+                };
+                
+                // Get anti-forgery token from modal form
+                const token = document.querySelector('#csvExportForm input[name="__RequestVerificationToken"]')?.value;
+                
+                // Perform actual CSV export via fetch
+                fetch('/Index?handler=ExportCsvWithOptions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(exportOptions)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Success - handle file download
+                        return response.blob().then(blob => {
+                            // Create download link
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            
+                            // Get filename from response headers or create default
+                            const contentDisposition = response.headers.get('content-disposition');
+                            let filename = `BWA-Export-${exportOptions.startDate}-${exportOptions.endDate}.csv`;
+                            if (contentDisposition) {
+                                const filenameMatch = contentDisposition.match(/filename="(.+)"/i);
+                                if (filenameMatch) {
+                                    filename = filenameMatch[1];
+                                }
+                            }
+                            
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                            
+                            // Show success message
+                            document.querySelector('.progress-title').textContent = 'Export erfolgreich!';
+                            document.getElementById('progressDescription').innerHTML = `
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Ihre Datei wurde erfolgreich generiert und heruntergeladen.
+                            `;
+                            
+                            console.log('🚀 CSV export completed successfully:', filename);
+                        });
+                    } else {
+                        // Handle error response
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error || 'Export fehlgeschlagen');
+                        });
+                    }
+                })
+                .then(() => {
+                    // Auto-close modal after success
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(csvExportModal).hide();
+                    }, 2000);
+                })
+                .catch(error => {
+                    console.error('Export error:', error);
+                    
+                    // Show error message
+                    document.querySelector('.progress-title').textContent = 'Export fehlgeschlagen';
+                    document.getElementById('progressDescription').innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        ${error.message || 'Ein Fehler ist beim Export aufgetreten. Bitte versuchen Sie es erneut.'}
+                    `;
+                    
+                    // Auto-close modal after error display
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(csvExportModal).hide();
+                    }, 3000);
+                });
+            }
+            
+            // Reset modal when hidden
+            csvExportModal.addEventListener('hidden.bs.modal', function() {
+                document.querySelector('.modal-body').style.display = 'block';
+                document.querySelector('.modal-footer').style.display = 'flex';
+                progressOverlay.classList.add('d-none');
+                exportForm.classList.remove('was-validated');
+                
+                // Reset progress
+                document.querySelector('.circle').style.strokeDasharray = '0, 100';
+                document.getElementById('progressPercentage').textContent = '0%';
+                document.querySelector('.progress-title').textContent = 'Export läuft...';
+                
+                // Remove animation classes
+                document.querySelectorAll('.export-section').forEach(section => {
+                    section.classList.remove('animate-in-left');
+                    section.style.animationDelay = '';
+                });
+            });
+            
+            // Premium button hover effects
+            document.querySelectorAll('.btn-premium-toggle').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-1px)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            console.log('Premium CSV Export Modal initialized ✨');
+        });
     </script>
     
     <!-- Premium Upload Styles -->

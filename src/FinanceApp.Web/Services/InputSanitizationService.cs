@@ -4,31 +4,6 @@ using System.Web;
 
 namespace FinanceApp.Web.Services;
 
-/// <summary>
-/// Service for comprehensive input sanitization with focus on XSS prevention
-/// 
-/// Security Features:
-/// - HTML tag removal and encoding
-/// - Script injection prevention
-/// - Dangerous character neutralization
-/// - German character preservation (ä, ö, ü, ß, €)
-/// 
-/// German BWA Context:
-/// Sanitizes user input while preserving German business terminology
-/// and financial data formatting used in BWA reports
-/// </summary>
-public interface IInputSanitizationService
-{
-    string SanitizeInput(string input);
-    string SanitizeHtml(string input);
-    string SanitizeFileName(string fileName);
-    string SanitizeBwaCategory(string category);
-    bool ContainsScriptInjection(string input);
-    string SanitizeTransactionInput(string input, string inputType);
-    string CreateSafeDisplayText(string input);
-    string SanitizeNumericInput(string input);
-}
-
 public class InputSanitizationService : IInputSanitizationService
 {
     // Script injection patterns - compiled for performance
@@ -327,8 +302,9 @@ public class InputSanitizationService : IInputSanitizationService
 
     /// <summary>
     /// Sanitize transaction input based on type
+    /// Updated to handle nullable input for CSV export compatibility
     /// </summary>
-    public string SanitizeTransactionInput(string input, string inputType)
+    public string SanitizeTransactionInput(string? input, string inputType)
     {
         if (string.IsNullOrEmpty(input))
             return string.Empty;
@@ -337,15 +313,20 @@ public class InputSanitizationService : IInputSanitizationService
         {
             "category" => SanitizeBwaCategory(input),
             "numeric" => SanitizeNumericInput(input) ?? "0",
+            "transactiontype" => input, // Pass through for enum validation
             _ => SanitizeInput(input)
         };
     }
 
     /// <summary>
     /// Create safe display text for UI output
+    /// Updated to handle nullable input for CSV export compatibility
     /// </summary>
-    public string CreateSafeDisplayText(string input)
+    public string CreateSafeDisplayText(string? input)
     {
+        if (string.IsNullOrEmpty(input))
+            return string.Empty;
+            
         return SanitizeHtml(input);
     }
 

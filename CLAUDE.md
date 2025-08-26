@@ -104,3 +104,4 @@ The application processes BWA reports which follow standardized German accountin
 - always use gh cli when possible
 - when you are writing tests, please make sure one test runs completly before going to the text one
 - always test changes in the browser with the playwrith mcp
+- do not use port 5000 since is taken by another app. Use 5001, 5002 etc
