@@ -10,6 +10,7 @@ public class IndexModel : PageModel
     private readonly DataImportService _dataImport;
     private readonly IFileValidationService _fileValidation;
     private readonly IInputSanitizationService _inputSanitization;
+    private readonly CsvExportService _csvExport;
     private readonly ILogger<IndexModel> _logger;
     
     public List<MonthSummary>? MonthlySummaries { get; set; }
@@ -24,12 +25,14 @@ public class IndexModel : PageModel
         DataImportService dataImport,
         IFileValidationService fileValidation,
         IInputSanitizationService inputSanitization,
+        CsvExportService csvExport,
         ILogger<IndexModel> logger)
     {
         _pdfParser = pdfParser;
         _dataImport = dataImport;
         _fileValidation = fileValidation;
         _inputSanitization = inputSanitization;
+        _csvExport = csvExport;
         _logger = logger;
     }
     
@@ -100,5 +103,50 @@ public class IndexModel : PageModel
         
         // Reload the page with updated data
         return RedirectToPage();
+    }
+    
+    /// <summary>
+    /// Exports all financial transactions to CSV format
+    /// 
+    /// Business Context:
+    /// - Exports BWA transaction data for external financial analysis
+    /// - Converts German number format to international CSV standards
+    /// - Provides downloadable file with standardized naming convention
+    /// </summary>
+    public async Task<IActionResult> OnGetExportCsv()
+    {
+        _logger.LogInformation("CSV export handler called!");
+        
+        try
+        {
+            // Fetch all transactions from database
+            var transactions = await _dataImport.GetTransactionsAsync();
+            
+            _logger.LogInformation($"Retrieved {transactions?.Count ?? 0} transactions for CSV export");
+            
+            if (transactions == null || !transactions.Any())
+            {
+                _logger.LogWarning("No transactions found for CSV export");
+                TempData["Warning"] = "Keine Transaktionen zum Exportieren vorhanden.";
+                return RedirectToPage();
+            }
+            
+            // Generate CSV using the export service
+            var csvBytes = _csvExport.ExportTransactionsToCsv(transactions);
+            
+            // Generate filename with current date
+            var fileName = $"Financial_Export_{DateTime.Now:yyyy-MM-dd}.csv";
+            
+            _logger.LogInformation($"CSV export generated: {fileName} with {transactions.Count} transactions");
+            
+            // Return the CSV file for download
+            return File(csvBytes, "text/csv", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating CSV export");
+            TempData["Error"] = "Fehler beim Exportieren der Daten.";
+            return RedirectToPage();
+        }
     }
 }
